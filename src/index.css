@@ -1,0 +1,22 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+}
+
+.board {
+  display: flex;
+  height: 100%;
+}
+
+.board__grid {
+  background: #222;
+}
+
+.board__grid-point {
+  fill: rgba(255, 255, 255, 0.15);
+}
