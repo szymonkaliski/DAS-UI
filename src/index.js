@@ -1,12 +1,18 @@
-import autobind from 'react-autobind';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { withContentRect } from 'react-measure';
+import autobind from 'react-autobind';
 import times from 'lodash.times';
+import { connect, Provider } from 'react-redux';
+import { createStore } from 'redux';
+import { withContentRect } from 'react-measure';
+
+import reducer from './reducers';
 
 import './index.css';
 
 const GRID_SIZE = 20;
+
+const store = createStore(reducer);
 
 const BoardGrid = ({ width, height }) => {
   const gridWidthCount = Math.floor(width / GRID_SIZE);
@@ -56,6 +62,7 @@ class App extends Component {
   }
 
   onKeydown(e) {
+    // TODO: send action
     console.log(e);
   }
 
@@ -68,4 +75,11 @@ class App extends Component {
   }
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const AppConnected = connect()(App);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <AppConnected />
+  </Provider>,
+  document.getElementById('root')
+);
