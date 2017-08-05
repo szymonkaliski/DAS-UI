@@ -1,4 +1,5 @@
-import React from 'react';
+import autobind from 'react-autobind';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { withContentRect } from 'react-measure';
 import times from 'lodash.times';
@@ -40,9 +41,31 @@ const Board = withContentRect('bounds')(({ contentRect, measureRef }) => {
   );
 });
 
-const App = () =>
-  <div className="app">
-    <Board />
-  </div>;
+class App extends Component {
+  constructor() {
+    super();
+    autobind(this);
+  }
+
+  componentDidMount() {
+    document.addEventListener('keydown', this.onKeydown);
+  }
+
+  componentWillUmount() {
+    document.removeEventListener('keydown', this.onKeydown);
+  }
+
+  onKeydown(e) {
+    console.log(e);
+  }
+
+  render() {
+    return (
+      <div className="app">
+        <Board />
+      </div>
+    );
+  }
+}
 
 ReactDOM.render(<App />, document.getElementById('root'));
