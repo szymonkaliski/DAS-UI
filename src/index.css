@@ -20,3 +20,13 @@
 .board__grid-point {
   fill: rgba(255, 255, 255, 0.15);
 }
+
+@keyframes pulsate {
+  0%   { fill: rgba(255, 255, 255, 0.35); }
+  50%  { fill: rgba(255, 255, 255, 0.15); }
+  100% { fill: rgba(255, 255, 255, 0.35); }
+}
+
+.board__cursor {
+  animation: pulsate 1.0s infinite;
+}
