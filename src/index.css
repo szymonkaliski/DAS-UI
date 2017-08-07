@@ -6,14 +6,7 @@
 .app {
   width: 100vw;
   height: 100vh;
-}
 
-.board {
-  display: flex;
-  height: 100%;
-}
-
-.board__grid {
   background: #222;
 }
 
@@ -29,4 +22,8 @@
 
 .board__cursor {
   animation: pulsate 1.0s infinite;
+}
+
+.new_block {
+  position: absolute;
 }
