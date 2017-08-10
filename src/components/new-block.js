@@ -19,16 +19,16 @@ const DEFAULT_BLOCK = `
   state: { internal: '' },
 
   // "code" is executed every time input or state changes
-  code: ({ input, state }) => {
+  code: ({ input, state, updateState, updateOutput }) => {
     // block code
 
-    return { // must conform to "output"
+    updateOutput({ // must conform to "output"
       y: state.internal + input.x
-    }
+    });
   },
 
   // optional UI to be rendered inside of the block
-  ui: ({ input, state, updateState }) => {
+  ui: ({ input, state, updateState, updateOutput }) => {
     return DOM.input({
       onChange: e => updateState({ internal: e.target.value })
     })

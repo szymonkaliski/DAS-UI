@@ -91,11 +91,85 @@ const sampleBlock = `
 
 const executeBlockSrc = blockSrc => new Function(`return ${blockSrc.trim()}`)();
 
-const out = executeBlockSrc(sampleBlock);
+// const out = executeBlockSrc(sampleBlock);
 
-console.log(
-  out.code({
-    input: { x: 2 },
-    state: { mod: 10 }
-  })
-);
+// console.log(
+//   out.code({
+//     input: { x: 2 },
+//     state: { mod: 10 }
+//   })
+// );
+
+const intervalBlock = {
+  name: 'interval',
+
+  output: { tick: 0 },
+  state: { counter: 0 },
+
+  code: ({ state, updateState, updateOutput }) => {
+    setTimeout(() => {
+      updateOutput({ tick: state.counter });
+      updateState({ counter: state.counter + 1 });
+    }, 200);
+  }
+};
+
+const logBlock = {
+  name: 'log',
+  input: { any: '' },
+
+  code: ({ input }) => {
+    console.log(input);
+  }
+};
+
+// console.log(intervalBlock)
+// console.log(logBlock)
+
+const uuid = require('uuid/v4');
+
+class AbstractBlock {
+  constructor(blockSpec) {
+    this.name = blockSpec.name;
+    this.input = blockSpec.input;
+    this.output = blockSpec.output;
+    this.state = blockSpec.state;
+    this.code = blockSpec.code;
+    this.ui = blockSpec.ui;
+
+
+
+  }
+
+
+}
+
+class Graph {
+  constructor() {
+    this.runningBlocks = {};
+    this.connections = [];
+  }
+
+  addBlock(block) {
+    const id = uuid();
+
+    this.runningBlocks[id] = block;
+
+    return id;
+  }
+
+  addConnection(from, to) {
+    const id = uuid();
+
+    this.connections.push({ id, from, to });
+
+    return id;
+  }
+}
+
+const graph = new Graph();
+
+const intervalId = graph.addBlock(intervalBlock);
+const logId = graph.addBlock(logBlock);
+
+graph.addConnection({ blockId: intervalId, output: 'tick' }, { blockId: logId, input: 'any' });
