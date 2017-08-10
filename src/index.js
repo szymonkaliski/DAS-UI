@@ -5,31 +5,20 @@ import times from 'lodash.times';
 import { connect, Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { withContentRect } from 'react-measure';
+import DOM from 'react-dom-factories';
 
-import { moveCursor, makeNewBlock } from './actions';
+import { moveCursor } from './actions';
 import reducer from './reducers';
 import { GRID_SIZE } from './constants';
+
+import NewBlock from './components/new-block';
 
 import './index.css';
 
 const store = createStore(reducer);
 
-class NewBlockUI extends Component {
-  componentDidMount() {
-    // focus with short timeout so we don't populate the field with just clicked letter
-    setTimeout(() => this.inputRef.focus(), 1);
-  }
-
-  render() {
-    const { x, y } = this.props;
-
-    return (
-      <div className="new_block" style={{ top: x, left: y }}>
-        <input ref={ref => (this.inputRef = ref)} />
-      </div>
-    );
-  }
-}
+// for blocks ad-hoc UIs
+window.DOM = DOM;
 
 const BoardGrid = ({ gridWidthCount, gridHeightCount }) => {
   return (
@@ -74,7 +63,7 @@ class App extends Component {
     autobind(this);
 
     this.state = {
-      newBlockUI: false
+      newBlock: false
     };
   }
 
@@ -86,16 +75,19 @@ class App extends Component {
     document.removeEventListener('keydown', this.onKeydown);
   }
 
-  onKeydown({ key }) {
+  onKeydown(e) {
+    const { key, target } = e;
+
+    if (target.localName !== 'body') {
+      return;
+    }
+
     const keyFns = {
       ArrowDown: () => this.props.moveCursor(0, 1),
       ArrowUp: () => this.props.moveCursor(0, -1),
       ArrowLeft: () => this.props.moveCursor(-1, 0),
       ArrowRight: () => this.props.moveCursor(1, 0),
-      n: () => {
-        this.setState({ newBlockUI: true });
-        // this.props.makeNewBlock()
-      }
+      n: () => this.setState({ newBlock: true }) // TODO: move to store?
     };
 
     if (keyFns[key]) {
@@ -104,7 +96,7 @@ class App extends Component {
   }
 
   render() {
-    const { newBlockUI } = this.state;
+    const { newBlock } = this.state;
     const { contentRect, measureRef } = this.props;
     const { width, height } = contentRect.bounds;
 
@@ -122,11 +114,7 @@ class App extends Component {
         <div style={{ paddingLeft: gridMarginWidth, paddingTop: gridMarginHeight }}>
           {shouldRender &&
             <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={this.props.cursor} />}
-          {newBlockUI &&
-            <NewBlockUI
-              x={this.props.cursor.y * GRID_SIZE + gridMarginHeight}
-              y={this.props.cursor.x * GRID_SIZE + gridMarginWidth}
-            />}
+          {newBlock && <NewBlock />}
         </div>
       </div>
     );
@@ -136,7 +124,7 @@ class App extends Component {
 const mapStateToProps = state => ({ cursor: state.get('cursor').toJS() });
 
 const AppMeasured = withContentRect('bounds')(App);
-const AppConnected = connect(mapStateToProps, { moveCursor, makeNewBlock })(AppMeasured);
+const AppConnected = connect(mapStateToProps, { moveCursor })(AppMeasured);
 
 ReactDOM.render(
   <Provider store={store}>

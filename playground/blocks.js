@@ -89,13 +89,13 @@ const sampleBlock = `
 }
 `;
 
-const executeBlockSrc = (blockSrc) => (new Function(`return ${blockSrc.trim()}`))();
+const executeBlockSrc = blockSrc => new Function(`return ${blockSrc.trim()}`)();
 
-const out = executeBlockSrc(sampleBlock)
+const out = executeBlockSrc(sampleBlock);
 
-console.log(out.code({
-  input: { x: 2 },
-  state: { mod: 10 }
-}));
-
-
+console.log(
+  out.code({
+    input: { x: 2 },
+    state: { mod: 10 }
+  })
+);

@@ -1,10 +1,11 @@
-import { MOVE_CURSOR, MAKE_NEW_BLOCK } from '../constants';
+import { MOVE_CURSOR, UPSERT_BLOCK } from '../constants';
 
 export const moveCursor = (x, y) => ({
   type: MOVE_CURSOR,
   payload: { x, y }
 });
 
-export const makeNewBlock = () => ({
-  type: MAKE_NEW_BLOCK,
+export const upsertBlock = block => ({
+  type: UPSERT_BLOCK,
+  payload: { block }
 });
