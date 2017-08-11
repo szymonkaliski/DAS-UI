@@ -62,7 +62,7 @@
 /*
  * block schema:
  * - input - object with inputs and default values
- * - output - object with outputs and default values
+ * - outputValue - object with outputs and default values
  * - code - backend
  * - ui - functional react ui, DOM exposed as global
  */
@@ -71,7 +71,7 @@ const sampleBlock = `
 {
   name: 'mult',
   input: { x: 0 },
-  output: { result: 0 },
+  outputValue: { result: 0 },
   state: { mod: 20 },
 
   code: ({ input, state, updateState }) => {
@@ -100,49 +100,39 @@ const executeBlockSrc = blockSrc => new Function(`return ${blockSrc.trim()}`)();
 //   })
 // );
 
+const uuid = require('uuid/v4');
+const Rx = require('rx');
+
 const intervalBlock = {
   name: 'interval',
 
-  output: { tick: 0 },
-  state: { counter: 0 },
+  outputs: ['tick'],
 
-  code: ({ state, updateState, updateOutput }) => {
-    setTimeout(() => {
-      updateOutput({ tick: state.counter });
-      updateState({ counter: state.counter + 1 });
-    }, 200);
+  code: ({ inputs, outputs }) => {
+    let counter = 0;
+
+    setInterval(() => {
+      outputs.tick.onNext(counter);
+      counter++;
+    }, 1000);
   }
 };
 
-const logBlock = {
-  name: 'log',
-  input: { any: '' },
+const tapBlock = {
+  name: 'tap',
 
-  code: ({ input }) => {
-    console.log(input);
+  inputs: ['any'],
+  outputs: ['any'],
+
+  code: ({ inputs, outputs }) => {
+    inputs.any
+      .tap(val => {
+        console.log('tap:', val);
+      })
+      .asObservable()
+      .subscribe(outputs.any);
   }
 };
-
-// console.log(intervalBlock)
-// console.log(logBlock)
-
-const uuid = require('uuid/v4');
-
-class AbstractBlock {
-  constructor(blockSpec) {
-    this.name = blockSpec.name;
-    this.input = blockSpec.input;
-    this.output = blockSpec.output;
-    this.state = blockSpec.state;
-    this.code = blockSpec.code;
-    this.ui = blockSpec.ui;
-
-
-
-  }
-
-
-}
 
 class Graph {
   constructor() {
@@ -155,6 +145,12 @@ class Graph {
 
     this.runningBlocks[id] = block;
 
+    const inputs = (block.inputs || []).reduce((memo, key) => Object.assign(memo, { [key]: new Rx.Subject() }), {});
+    const outputs = (block.outputs || []).reduce((memo, key) => Object.assign(memo, { [key]: new Rx.Subject() }), {});
+
+    this.runningBlocks[id]._streams = { inputs, outputs };
+    this.runningBlocks[id].code({ inputs, outputs });
+
     return id;
   }
 
@@ -163,6 +159,11 @@ class Graph {
 
     this.connections.push({ id, from, to });
 
+    const fromOutput = this.runningBlocks[from.id]._streams.outputs[from.output];
+    const toInput = this.runningBlocks[to.id]._streams.inputs[to.input];
+
+    fromOutput.asObservable().subscribe(toInput);
+
     return id;
   }
 }
@@ -170,6 +171,8 @@ class Graph {
 const graph = new Graph();
 
 const intervalId = graph.addBlock(intervalBlock);
-const logId = graph.addBlock(logBlock);
+const tapId = graph.addBlock(tapBlock);
 
-graph.addConnection({ blockId: intervalId, output: 'tick' }, { blockId: logId, input: 'any' });
+graph.addConnection({ id: intervalId, output: 'tick' }, { id: tapId, input: 'any' });
+
+

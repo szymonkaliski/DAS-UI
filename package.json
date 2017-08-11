@@ -19,6 +19,7 @@
     "react-scripts": "1.0.10",
     "recast": "^0.12.6",
     "redux": "^3.7.2",
+    "rx": "^4.1.0",
     "uuid": "^3.1.0"
   },
   "scripts": {
