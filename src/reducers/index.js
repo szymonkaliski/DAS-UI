@@ -1,13 +1,16 @@
 import { fromJS } from 'immutable';
 
-import { MOVE_CURSOR, UPSERT_BLOCK } from '../constants';
+import { MOVE_CURSOR, OPEN_CREATE_BLOCK, UPSERT_BLOCK } from '../constants';
 
 const initialState = fromJS({
   cursor: {
     x: 0,
     y: 0
   },
-  blocks: {}
+  blocks: {},
+  overlays: {
+    createBlock: false
+  }
 });
 
 export default (state = initialState, action) => {
@@ -19,8 +22,12 @@ export default (state = initialState, action) => {
 
   if (type === UPSERT_BLOCK) {
     const { block } = payload;
+    state = state.setIn(['blocks', block.name], block).setIn(['overlays', 'createBlock'], false);
+  }
 
-    state = state.setIn('blocks', block.name, block);
+  if (type === OPEN_CREATE_BLOCK) {
+    const { block } = payload;
+    state = state.setIn(['overlays', 'createBlock'], block);
   }
 
   // console.info(JSON.stringify(state.toJS(), null, 2));

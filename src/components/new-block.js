@@ -1,95 +1,71 @@
-import Ace from 'react-ace';
-import autobind from 'react-autobind';
+import Autocomplete from 'react-autocomplete';
 import React, { Component } from 'react';
+import autobind from 'react-autobind';
+import classnames from 'classnames';
 import { connect } from 'react-redux';
 
-import 'brace/mode/javascript';
-import 'brace/theme/github';
+import { NEW_BLOCK_NAME } from '../constants';
+import { openCreateBlock } from '../actions';
 
-import Overlay from './overlay';
+// has to be a class - required by react-autocomplete
+class NewBlockItem extends Component {
+  render() {
+    const { item, isHighlighted } = this.props;
 
-import { upsertBlock } from '../actions';
-
-const DEFAULT_BLOCK = `
-{
-  name: 'sample block',
-
-  input: { x: '' },
-  output: { y: '' },
-  state: { internal: '' },
-
-  // "code" is executed every time input or state changes
-  code: ({ input, state, updateState, updateOutput }) => {
-    // block code
-
-    updateOutput({ // must conform to "output"
-      y: state.internal + input.x
-    });
-  },
-
-  // optional UI to be rendered inside of the block
-  ui: ({ input, state, updateState, updateOutput }) => {
-    return DOM.input({
-      onChange: e => updateState({ internal: e.target.value })
-    })
+    return (
+      <div className={classnames('new-block__item', isHighlighted && 'new-block__item--selected')}>
+        {item.name}
+      </div>
+    );
   }
-}`;
+}
 
 class NewBlock extends Component {
   constructor() {
     super();
     autobind(this);
 
-    this.state = {
-      block: DEFAULT_BLOCK
-    };
+    this.state = { value: '' };
   }
 
   componentDidMount() {
     // focus with short timeout so we don't populate the field with just clicked letter
-    setTimeout(() => this.aceRef.editor.focus(), 1);
+    setTimeout(() => this.autocompleteRef.focus(), 1);
   }
 
-  onSave() {
-    const executeBlockSrc = blockSrc => new Function(`return ${blockSrc.trim()}`)();
+  onChange(e) {
+    this.setState({ value: e.target.value });
+  }
 
-    try {
-      const block = executeBlockSrc(this.state.block);
-
-      console.log({ block });
-
-      this.props.upsertBlock(block);
-    } catch (e) {
-      console.error(e);
-    }
+  onSelect(e) {
+    // TODO: place block on board if exists, otherwise open create dialog - this logic should be in action/reducer
+    this.props.openCreateBlock({ block: e });
   }
 
   render() {
+    const { value } = this.state;
+    const { blocks, x, y } = this.props;
+
     return (
-      <div className="new_block">
-        <Overlay>
-          <div>
-            <button onClick={this.onSave}>save</button>
-          </div>
-          <Ace
-            ref={ref => (this.aceRef = ref)}
-            width="100%"
-            height="100%"
-            fontSize={12}
-            mode="javascript"
-            name="new_block_ace"
-            theme="github"
-            showGutter={false}
-            showPrintMargin={false}
-            showLineNumbers={false}
-            onChange={text => this.setState({ block: text })}
-            value={this.state.block}
-            editorProps={{ $blockScrolling: true }}
-          />
-        </Overlay>
+      <div className="new-block" style={{ top: x, left: y }}>
+        <Autocomplete
+          ref={ref => (this.autocompleteRef = ref)}
+          getItemValue={block => block.id}
+          items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(blocks)}
+          onChange={this.onChange}
+          onSelect={this.onSelect}
+          renderItem={(item, isHighlighted) => <NewBlockItem item={item} isHighlighted={isHighlighted} />}
+          value={value}
+        />
       </div>
     );
   }
 }
 
-export default connect(null, { upsertBlock })(NewBlock);
+const mapStateToProps = state => {
+  return {
+    blocks: state.get('blocks').valueSeq().toJS().map(block => ({ ...block, id: block.name }))
+  };
+};
+
+export default connect(mapStateToProps, { openCreateBlock })(NewBlock);

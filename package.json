@@ -5,6 +5,7 @@
   "dependencies": {
     "ast-types": "^0.9.12",
     "brace": "^0.10.0",
+    "classnames": "^2.2.5",
     "immutable": "^3.8.1",
     "lodash.property": "^4.4.2",
     "lodash.times": "^4.3.2",
