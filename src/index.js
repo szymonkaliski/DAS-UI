@@ -6,9 +6,10 @@ import { createStore } from 'redux';
 import { withContentRect } from 'react-measure';
 import DOM from 'react-dom-factories';
 
-import { moveCursor } from './actions';
+import createGraph from './services/graph';
 import reducer from './reducers';
 import { GRID_SIZE } from './constants';
+import { moveCursor } from './actions';
 
 import Board from './components/board';
 import CreateBlock from './components/create-block';
@@ -21,6 +22,7 @@ import './index.css';
 window.DOM = DOM;
 
 const store = createStore(reducer);
+const graph = createGraph(store);
 
 class App extends Component {
   constructor() {

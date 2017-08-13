@@ -27,6 +27,9 @@ export default (state = initialState, action) => {
 
   if (type === UPSERT_BLOCK) {
     const { block } = payload;
+
+    // TODO: place on board if creating new one...
+
     state = state.setIn(['availableBlocks', block.name], block).setIn(['overlays', 'createBlock'], false);
   }
 
@@ -40,15 +43,18 @@ export default (state = initialState, action) => {
       // create on graph if using one of available blocks
       const id = uuid();
 
-      state = state.setIn(['graph', 'blocks', id], fromJS({
-        id,
-        block,
-        position: state.get('cursor').toJS(),
-      }));
+      state = state.setIn(
+        ['graph', 'blocks', id],
+        fromJS({
+          id,
+          block,
+          position: state.get('cursor').toJS()
+        })
+      );
     }
   }
 
-  // console.info({ action, state: state.toJS() });
+  console.info(action, state.toJS());
 
   return state;
 };

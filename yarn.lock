@@ -2987,6 +2987,10 @@ ignore@^3.2.0:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-3.3.3.tgz#432352e57accd87ab3110e82d3fea0e47812156d"
 
+immutable-diff@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/immutable-diff/-/immutable-diff-0.1.1.tgz#99c4b5d88f226aab190c53189320b76157ba369a"
+
 immutable@^3.8.1:
   version "3.8.1"
   resolved "https://registry.yarnpkg.com/immutable/-/immutable-3.8.1.tgz#200807f11ab0f72710ea485542de088075f68cd2"
