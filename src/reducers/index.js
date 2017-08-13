@@ -1,13 +1,18 @@
 import { fromJS } from 'immutable';
+import uuid from 'uuid/v4';
 
-import { MOVE_CURSOR, OPEN_CREATE_BLOCK, UPSERT_BLOCK } from '../constants';
+import { MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, NEW_BLOCK_NAME } from '../constants';
 
 const initialState = fromJS({
   cursor: {
     x: 0,
     y: 0
   },
-  blocks: {},
+  availableBlocks: {},
+  graph: {
+    blocks: {},
+    connections: {}
+  },
   overlays: {
     createBlock: false
   }
@@ -22,15 +27,28 @@ export default (state = initialState, action) => {
 
   if (type === UPSERT_BLOCK) {
     const { block } = payload;
-    state = state.setIn(['blocks', block.name], block).setIn(['overlays', 'createBlock'], false);
+    state = state.setIn(['availableBlocks', block.name], block).setIn(['overlays', 'createBlock'], false);
   }
 
-  if (type === OPEN_CREATE_BLOCK) {
+  if (type === CREATE_BLOCK) {
     const { block } = payload;
-    state = state.setIn(['overlays', 'createBlock'], block);
+
+    if (block === NEW_BLOCK_NAME) {
+      // open overlay if creating brand new block
+      state = state.setIn(['overlays', 'createBlock'], block);
+    } else if (state.hasIn(['availableBlocks', block])) {
+      // create on graph if using one of available blocks
+      const id = uuid();
+
+      state = state.setIn(['graph', 'blocks', id], fromJS({
+        id,
+        block,
+        position: state.get('cursor').toJS(),
+      }));
+    }
   }
 
-  // console.info(JSON.stringify(state.toJS(), null, 2));
+  // console.info({ action, state: state.toJS() });
 
   return state;
 };

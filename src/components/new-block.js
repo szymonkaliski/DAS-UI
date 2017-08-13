@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import { connect } from 'react-redux';
 
 import { NEW_BLOCK_NAME } from '../constants';
-import { openCreateBlock } from '../actions';
+import { createBlock } from '../actions';
 
 // has to be a class - required by react-autocomplete
 class NewBlockItem extends Component {
@@ -37,21 +37,20 @@ class NewBlock extends Component {
     this.setState({ value: e.target.value });
   }
 
-  onSelect(e) {
-    // TODO: place block on board if exists, otherwise open create dialog - this logic should be in action/reducer
-    this.props.openCreateBlock({ block: e });
+  onSelect(blockName) {
+    this.props.createBlock(blockName);
   }
 
   render() {
     const { value } = this.state;
-    const { blocks, x, y } = this.props;
+    const { availableBlocks, x, y } = this.props;
 
     return (
       <div className="new-block" style={{ top: x, left: y }}>
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
           getItemValue={block => block.id}
-          items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(blocks)}
+          items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(availableBlocks)}
           onChange={this.onChange}
           onSelect={this.onSelect}
           renderItem={(item, isHighlighted) => <NewBlockItem item={item} isHighlighted={isHighlighted} />}
@@ -64,8 +63,8 @@ class NewBlock extends Component {
 
 const mapStateToProps = state => {
   return {
-    blocks: state.get('blocks').valueSeq().toJS().map(block => ({ ...block, id: block.name }))
+    availableBlocks: state.get('availableBlocks').valueSeq().toJS().map(block => ({ ...block, id: block.name }))
   };
 };
 
-export default connect(mapStateToProps, { openCreateBlock })(NewBlock);
+export default connect(mapStateToProps, { createBlock })(NewBlock);
