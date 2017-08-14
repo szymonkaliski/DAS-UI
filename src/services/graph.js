@@ -47,7 +47,7 @@ class Graph {
           if (pathType === 'blocks') {
             this.addBlock({
               id: diff.getIn(['path', 1]),
-              blockName: diff.getIn(['value', 'block'])
+              blockName: diff.getIn(['value', 'name'])
             });
           } else if (pathType === 'connections') {
           }

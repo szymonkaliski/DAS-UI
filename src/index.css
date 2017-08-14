@@ -8,6 +8,7 @@
   height: 100vh;
 
   background: #222;
+  overflow: hidden; /* feels like a hack for transform() on main app wrapper */
 }
 
 .board__grid-point {
@@ -56,4 +57,9 @@
 
 .new-block__item--selected {
   background: #DDD;
+}
+
+.block__wrapper {
+  position: absolute;
+  background: white;
 }

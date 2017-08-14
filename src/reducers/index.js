@@ -3,7 +3,7 @@ import uuid from 'uuid/v4';
 
 import { MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, NEW_BLOCK_NAME } from '../constants';
 
-const initialState = fromJS({
+const defaultInitialState = fromJS({
   cursor: {
     x: 0,
     y: 0
@@ -17,6 +17,26 @@ const initialState = fromJS({
     createBlock: false
   }
 });
+
+const isDebug = window.location.search.indexOf('debug') >= 0;
+
+let parsed;
+
+if (isDebug) {
+  try {
+    parsed = JSON.parse(localStorage.getItem('state'));
+  }
+  catch (e) {
+    console.error(e);
+  }
+
+  window.clearGraph = () => {
+    localStorage.setItem('state', null);
+    window.location.reload();
+  }
+}
+
+const initialState = fromJS(parsed || defaultInitialState);
 
 export default (state = initialState, action) => {
   const { type, payload } = action;
@@ -47,14 +67,16 @@ export default (state = initialState, action) => {
         ['graph', 'blocks', id],
         fromJS({
           id,
-          block,
+          name: block,
           position: state.get('cursor').toJS()
         })
       );
     }
   }
 
-  console.info(action, state.toJS());
+  if (isDebug && state) {
+    localStorage.setItem('state', JSON.stringify(state.toJS()));
+  }
 
   return state;
 };

@@ -1,16 +1,17 @@
+import DOM from 'react-dom-factories';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'react-autobind';
 import { connect, Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { withContentRect } from 'react-measure';
-import DOM from 'react-dom-factories';
 
 import createGraph from './services/graph';
 import reducer from './reducers';
 import { GRID_SIZE } from './constants';
 import { moveCursor } from './actions';
 
+import Blocks from './components/blocks';
 import Board from './components/board';
 import CreateBlock from './components/create-block';
 import NewBlock from './components/new-block';
@@ -94,9 +95,10 @@ class App extends Component {
 
     return (
       <div className="app" ref={measureRef}>
-        <div style={{ paddingLeft: gridMarginWidth, paddingTop: gridMarginHeight }}>
+        <div style={{ transform: `translate(${gridMarginWidth}px, ${gridMarginHeight}px)` }}>
           {shouldRender && <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={cursor} />}
           {newBlock && <NewBlock x={x} y={y} />}
+          <Blocks />
         </div>
 
         {this.renderOverlays()}
