@@ -1,7 +1,7 @@
 import { fromJS } from 'immutable';
 import uuid from 'uuid/v4';
 
-import { MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, NEW_BLOCK_NAME } from '../constants';
+import { IS_DEBUG, MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, NEW_BLOCK_NAME } from '../constants';
 
 const defaultInitialState = fromJS({
   cursor: {
@@ -14,29 +14,39 @@ const defaultInitialState = fromJS({
     connections: {}
   },
   overlays: {
-    createBlock: false
+    upsertBlock: false
   }
 });
 
-const isDebug = window.location.search.indexOf('debug') >= 0;
-
 let parsed;
 
-if (isDebug) {
+if (IS_DEBUG) {
   try {
     parsed = JSON.parse(localStorage.getItem('state'));
-  }
-  catch (e) {
+  } catch (e) {
     console.error(e);
   }
 
-  window.clearGraph = () => {
+  window.clearState = () => {
     localStorage.setItem('state', null);
     window.location.reload();
-  }
+  };
 }
 
 const initialState = fromJS(parsed || defaultInitialState);
+
+const createBlockOnBoard = (state, block) => {
+  const id = uuid();
+
+  return state.setIn(
+    ['graph', 'blocks', id],
+    fromJS({
+      id,
+      name: block,
+      position: state.get('cursor').toJS()
+    })
+  );
+};
 
 export default (state = initialState, action) => {
   const { type, payload } = action;
@@ -48,9 +58,13 @@ export default (state = initialState, action) => {
   if (type === UPSERT_BLOCK) {
     const { block } = payload;
 
-    // TODO: place on board if creating new one...
+    const creatingNewBlock = state.getIn(['overlays', 'upsertBlock']) === NEW_BLOCK_NAME;
 
-    state = state.setIn(['availableBlocks', block.name], block).setIn(['overlays', 'createBlock'], false);
+    state = state.setIn(['availableBlocks', block.name], block).setIn(['overlays', 'upsertBlock'], false);
+
+    if (creatingNewBlock) {
+      state = createBlockOnBoard(state, block.name);
+    }
   }
 
   if (type === CREATE_BLOCK) {
@@ -58,23 +72,14 @@ export default (state = initialState, action) => {
 
     if (block === NEW_BLOCK_NAME) {
       // open overlay if creating brand new block
-      state = state.setIn(['overlays', 'createBlock'], block);
+      state = state.setIn(['overlays', 'upsertBlock'], block);
     } else if (state.hasIn(['availableBlocks', block])) {
       // create on graph if using one of available blocks
-      const id = uuid();
-
-      state = state.setIn(
-        ['graph', 'blocks', id],
-        fromJS({
-          id,
-          name: block,
-          position: state.get('cursor').toJS()
-        })
-      );
+      state = createBlockOnBoard(state, block);
     }
   }
 
-  if (isDebug && state) {
+  if (IS_DEBUG && state) {
     localStorage.setItem('state', JSON.stringify(state.toJS()));
   }
 

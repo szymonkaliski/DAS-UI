@@ -8,12 +8,12 @@ import { withContentRect } from 'react-measure';
 
 import createGraph from './services/graph';
 import reducer from './reducers';
-import { GRID_SIZE } from './constants';
+import { IS_DEBUG, GRID_SIZE } from './constants';
 import { moveCursor } from './actions';
 
 import Blocks from './components/blocks';
 import Board from './components/board';
-import CreateBlock from './components/create-block';
+import UpsertBlock from './components/upsert-block';
 import NewBlock from './components/new-block';
 import Overlay from './components/overlay';
 
@@ -24,6 +24,19 @@ window.DOM = DOM;
 
 const store = createStore(reducer);
 const graph = createGraph(store);
+
+if (IS_DEBUG) {
+  window.dumpState = () => {
+    console.log(store.getState().toJS());
+  };
+
+  window.dumpGraph = () => {
+    console.log({
+      blocks: graph.blocks,
+      connections: graph.connections
+    });
+  };
+}
 
 class App extends Component {
   constructor() {
@@ -68,9 +81,9 @@ class App extends Component {
 
     return (
       <div>
-        {overlays.createBlock &&
+        {overlays.upsertBlock &&
           <Overlay>
-            <CreateBlock block={overlays.createBlock} />
+            <UpsertBlock block={overlays.upsertBlock} />
           </Overlay>}
       </div>
     );

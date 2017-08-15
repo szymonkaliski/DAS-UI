@@ -1,3 +1,4 @@
+import { fromJS } from 'immutable';
 import { Subject } from 'rx';
 import autobind from 'react-autobind';
 import makeDiff from 'immutable-diff';
@@ -16,16 +17,17 @@ class Graph {
     autobind(this);
 
     this.store = store;
-    this.prevGraphState = this.getGraphStoreState();
-
-    this.store.subscribe(this.onStoreChange);
+    this.prevGraphState = fromJS({ blocks: {}, connections: {} });
 
     this.blocks = {};
     this.connections = [];
+
+    this.onStoreChange();
+    this.store.subscribe(this.onStoreChange);
   }
 
   getBlockSpec(blockName) {
-    return this.store.getState().getIn(['availableBlocks', blockName]);
+    return { ...this.store.getState().getIn(['availableBlocks', blockName]) };
   }
 
   getGraphStoreState() {
@@ -58,7 +60,7 @@ class Graph {
         const op = ops[singleDiff.get('op')];
 
         if (!op) {
-          console.warn(`unknown op: ${op}`, diff.toJS());
+          console.warn(`unknown op: ${singleDiff.get('op')}`, { diff: diff.toJS() });
           return;
         }
 
@@ -70,9 +72,10 @@ class Graph {
   }
 
   addBlock({ id, blockName }) {
-    console.log('addBlock', id, blockName);
-
     const blockSpec = this.getBlockSpec(blockName);
+
+    console.log('addBlock', { id, blockName, blockSpec });
+
     const streams = streamsFromSpec(blockSpec);
 
     this.blocks[id] = blockSpec;

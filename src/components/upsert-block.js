@@ -23,7 +23,7 @@ const DEFAULT_BLOCK = `
   }
 }`;
 
-class CreateBlock extends Component {
+class UpsertBlock extends Component {
   constructor() {
     super();
     autobind(this);
@@ -56,7 +56,7 @@ class CreateBlock extends Component {
 
   render() {
     return (
-      <div className="create-block">
+      <div className="upsert-block">
         <div>
           <button onClick={this.onSave}>save</button>
         </div>
@@ -80,4 +80,4 @@ class CreateBlock extends Component {
   }
 }
 
-export default connect(null, { upsertBlock })(CreateBlock);
+export default connect(null, { upsertBlock })(UpsertBlock);

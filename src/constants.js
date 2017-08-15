@@ -1,3 +1,5 @@
+export const IS_DEBUG = window.location.search.indexOf('debug') >= 0;
+
 export const GRID_SIZE = 20;
 
 export const MOVE_CURSOR = 'MOVE_CURSOR';

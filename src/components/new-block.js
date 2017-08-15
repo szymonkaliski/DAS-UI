@@ -46,7 +46,7 @@ class NewBlock extends Component {
     const { availableBlocks, x, y } = this.props;
 
     return (
-      <div className="new-block" style={{ top: x, left: y }}>
+      <div className="new-block" style={{ top: y, left: x }}>
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
           getItemValue={block => block.id}

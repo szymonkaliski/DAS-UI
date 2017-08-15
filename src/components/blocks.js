@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { GRID_SIZE } from '../constants';
 
 const Block = ({ block }) => {
-  console.log(block);
+  // console.log(block);
 
   return (
     <div
