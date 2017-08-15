@@ -63,3 +63,13 @@
   position: absolute;
   background: white;
 }
+
+.block__input {
+  position: absolute;
+  background: yellow;
+}
+
+.block__output {
+  position: absolute;
+  background: blue;
+}

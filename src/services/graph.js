@@ -27,7 +27,7 @@ class Graph {
   }
 
   getBlockSpec(blockName) {
-    return { ...this.store.getState().getIn(['availableBlocks', blockName]) };
+    return { ...this.store.getState().getIn(['blockSpecs', blockName]) };
   }
 
   getGraphStoreState() {

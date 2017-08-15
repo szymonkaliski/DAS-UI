@@ -3,12 +3,12 @@ import uuid from 'uuid/v4';
 
 import { IS_DEBUG, MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, NEW_BLOCK_NAME } from '../constants';
 
-const defaultInitialState = fromJS({
+let initialState = fromJS({
   cursor: {
     x: 0,
     y: 0
   },
-  availableBlocks: {},
+  blockSpecs: {},
   graph: {
     blocks: {},
     connections: {}
@@ -18,9 +18,9 @@ const defaultInitialState = fromJS({
   }
 });
 
-let parsed;
-
 if (IS_DEBUG) {
+  let parsed;
+
   try {
     parsed = JSON.parse(localStorage.getItem('state'));
   } catch (e) {
@@ -31,9 +31,17 @@ if (IS_DEBUG) {
     localStorage.setItem('state', null);
     window.location.reload();
   };
-}
 
-const initialState = fromJS(parsed || defaultInitialState);
+  if (parsed) {
+    initialState = fromJS(parsed);
+
+    // block specs are plain JS objects inside of state!
+    initialState = initialState.delete('blockSpecs');
+    Object.keys(parsed.blockSpecs).forEach(key => {
+      initialState = initialState.setIn(['blockSpecs', key], parsed.blockSpecs[key]);
+    });
+  }
+}
 
 const createBlockOnBoard = (state, block) => {
   const id = uuid();
@@ -60,7 +68,7 @@ export default (state = initialState, action) => {
 
     const creatingNewBlock = state.getIn(['overlays', 'upsertBlock']) === NEW_BLOCK_NAME;
 
-    state = state.setIn(['availableBlocks', block.name], block).setIn(['overlays', 'upsertBlock'], false);
+    state = state.setIn(['blockSpecs', block.name], block).setIn(['overlays', 'upsertBlock'], false);
 
     if (creatingNewBlock) {
       state = createBlockOnBoard(state, block.name);
@@ -73,12 +81,13 @@ export default (state = initialState, action) => {
     if (block === NEW_BLOCK_NAME) {
       // open overlay if creating brand new block
       state = state.setIn(['overlays', 'upsertBlock'], block);
-    } else if (state.hasIn(['availableBlocks', block])) {
+    } else if (state.hasIn(['blockSpecs', block])) {
       // create on graph if using one of available blocks
       state = createBlockOnBoard(state, block);
     }
   }
 
+  // FIXME: blockSpecs[].code doesn't stringify...
   if (IS_DEBUG && state) {
     localStorage.setItem('state', JSON.stringify(state.toJS()));
   }

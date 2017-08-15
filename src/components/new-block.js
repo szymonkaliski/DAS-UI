@@ -43,14 +43,14 @@ class NewBlock extends Component {
 
   render() {
     const { value } = this.state;
-    const { availableBlocks, x, y } = this.props;
+    const { blockSpecs, x, y } = this.props;
 
     return (
       <div className="new-block" style={{ top: y, left: x }}>
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
           getItemValue={block => block.id}
-          items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(availableBlocks)}
+          items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(blockSpecs)}
           onChange={this.onChange}
           onSelect={this.onSelect}
           renderItem={(item, isHighlighted) => <NewBlockItem item={item} isHighlighted={isHighlighted} />}
@@ -63,7 +63,7 @@ class NewBlock extends Component {
 
 const mapStateToProps = state => {
   return {
-    availableBlocks: state.get('availableBlocks').valueSeq().toJS().map(block => ({ ...block, id: block.name }))
+    blockSpecs: state.get('blockSpecs').valueSeq().toJS().map(block => ({ ...block, id: block.name }))
   };
 };
 
