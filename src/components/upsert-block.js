@@ -12,8 +12,8 @@ const DEFAULT_BLOCK = `
 {
   name: 'sample block',
 
-  inputs: [ 'x' ],
-  outputs: [ 'y' ],
+  inputs: [ 'a', 'b', 'c' ],
+  outputs: [ 'x', 'y', 'z' ],
 
   code: ({ inputs, outputs, state }) => {
   },
