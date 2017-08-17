@@ -143,7 +143,7 @@ class Graph {
   addBlock(block) {
     const id = uuid();
 
-    this.runningBlocks[id] = block;
+    this.runningBlocks[id] = Object.assign({}, block);
 
     const inputs = (block.inputs || []).reduce((memo, key) => Object.assign(memo, { [key]: new Rx.Subject() }), {});
     const outputs = (block.outputs || []).reduce((memo, key) => Object.assign(memo, { [key]: new Rx.Subject() }), {});
@@ -173,6 +173,25 @@ const graph = new Graph();
 const intervalId = graph.addBlock(intervalBlock);
 const tapId = graph.addBlock(tapBlock);
 
-graph.addConnection({ id: intervalId, output: 'tick' }, { id: tapId, input: 'any' });
+// graph.addConnection({ id: intervalId, output: 'tick' }, { id: tapId, input: 'any' });
 
+// stringify and parse block
 
+const stringifyBlock = obj => {
+  return JSON.stringify(obj, (_, value) => (typeof value === 'function' ? value.toString() : value));
+};
+
+const parseBlock = str => {
+  const parsed = JSON.parse(str);
+
+  if (parsed.code) parsed.code = executeBlockSrc(parsed.code);
+  if (parsed.ui) parsed.ui = executeBlockSrc(parsed.ui);
+
+  return parsed;
+};
+
+const stringified = stringifyBlock(tapBlock);
+
+console.log(stringified);
+
+console.log(parseBlock(stringified));
