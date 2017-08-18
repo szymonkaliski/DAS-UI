@@ -43,8 +43,6 @@ class UpsertBlock extends Component {
     try {
       const block = executeBlockSrc(this.state.block);
 
-      console.log({ block });
-
       this.props.upsertBlock(block);
     } catch (e) {
       console.error(e);

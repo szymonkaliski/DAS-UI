@@ -12,6 +12,8 @@ const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
   };
 };
 
+const IGNORE_PATH_KEYS = ['hovered'];
+
 class Graph {
   constructor(store) {
     autobind(this);
@@ -58,6 +60,12 @@ class Graph {
 
       diff.forEach(singleDiff => {
         const op = ops[singleDiff.get('op')];
+        const isIgnored = IGNORE_PATH_KEYS.some(key => singleDiff.get('path').contains(key));
+
+        if (isIgnored) {
+          console.info('ignornig diff', { diff: diff.toJS() });
+          return;
+        }
 
         if (!op) {
           console.warn(`unknown op: ${singleDiff.get('op')}`, { diff: diff.toJS() });

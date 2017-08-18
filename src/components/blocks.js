@@ -1,5 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
+import get from 'lodash.get';
 import { connect } from 'react-redux';
 
 import { GRID_SIZE } from '../constants';
@@ -7,7 +8,7 @@ import { GRID_SIZE } from '../constants';
 const Input = ({ i, name, isHovered }) => {
   return (
     <div
-      className={classnames("block__input", { 'block__input--hovered': isHovered })}
+      className={classnames('block__input', { 'block__input--hovered': isHovered })}
       style={{
         top: (i + 1) * GRID_SIZE * -1
       }}
@@ -20,7 +21,7 @@ const Input = ({ i, name, isHovered }) => {
 const Output = ({ i, name, isHovered }) => {
   return (
     <div
-      className={classnames("block__output", { 'block__output--hovered': isHovered })}
+      className={classnames('block__output', { 'block__output--hovered': isHovered })}
       style={{
         top: (i + 1) * GRID_SIZE
       }}
@@ -32,30 +33,37 @@ const Output = ({ i, name, isHovered }) => {
 
 const Block = ({ block, spec, cursor }) => {
   const blockWidth = 5; // TODO: block width should be measured if it has custom UI? how?
-  const isInsideWidth = block.position.x <= cursor.x && cursor.x < block.position.x + blockWidth;
-  const isHovered = cursor.y === block.position.y && isInsideWidth;
 
   return (
     <div
-      className={classnames('block__wrapper', { 'block__wrapper--hovered': isHovered })}
+      className={classnames('block__wrapper', {
+        'block__wrapper--hovered': get(block, ['hovered', 'type']) === 'block'
+      })}
       style={{
         top: block.position.y * GRID_SIZE,
         left: block.position.x * GRID_SIZE,
         width: blockWidth * GRID_SIZE
       }}
     >
-      {([...spec.inputs])
+      {spec.inputs
+        .slice()
         .reverse()
         .map((input, i) =>
-          <Input i={i} key={input} name={input} isHovered={isInsideWidth && cursor.y === block.position.y - (i + 1)} />
+          <Input
+            i={i}
+            key={input}
+            name={input}
+            isHovered={get(block, ['hovered', 'type']) === 'input' && get(block, ['hovered', 'name']) === input}
+          />
         )}
+
       {(spec.outputs || [])
         .map((output, i) =>
           <Output
             i={i}
             key={output}
             name={output}
-            isHovered={isInsideWidth && cursor.y === block.position.y + (i + 1)}
+            isHovered={get(block, ['hovered', 'type']) === 'output' && get(block, ['hovered', 'name']) === output}
           />
         )}
       {block.name}
