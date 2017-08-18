@@ -3,6 +3,40 @@ import uuid from 'uuid/v4';
 
 import { IS_DEBUG, MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, NEW_BLOCK_NAME } from '../constants';
 
+import { executeBlockSrc } from '../utils';
+
+const stringifyState = obj => {
+  return JSON.stringify(obj, (_, value) => (typeof value === 'function' ? value.toString() : value));
+};
+
+const parseState = str => {
+  let parsed;
+
+  try {
+    parsed = JSON.parse(str);
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (!parsed) {
+    return;
+  }
+
+  Object.keys(parsed.blockSpecs || {}).forEach(key => {
+    const parsedBlockSpec = parsed.blockSpecs[key];
+
+    if (parsedBlockSpec.code) {
+      parsedBlockSpec.code = executeBlockSrc(parsedBlockSpec.code);
+    }
+
+    if (parsedBlockSpec.ui) {
+      parsedBlockSpec.ui = executeBlockSrc(parsedBlockSpec.ui);
+    }
+  });
+
+  return parsed;
+};
+
 let initialState = fromJS({
   cursor: {
     x: 0,
@@ -19,13 +53,7 @@ let initialState = fromJS({
 });
 
 if (IS_DEBUG) {
-  let parsed;
-
-  try {
-    parsed = JSON.parse(localStorage.getItem('state'));
-  } catch (e) {
-    console.error(e);
-  }
+  const parsed = parseState(localStorage.getItem('state'));
 
   window.clearState = () => {
     localStorage.setItem('state', null);
@@ -89,7 +117,7 @@ export default (state = initialState, action) => {
 
   // FIXME: blockSpecs[].code doesn't stringify...
   if (IS_DEBUG && state) {
-    localStorage.setItem('state', JSON.stringify(state.toJS()));
+    localStorage.setItem('state', stringifyState(state.toJS()));
   }
 
   return state;

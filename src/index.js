@@ -103,8 +103,8 @@ class App extends Component {
 
     const shouldRender = width > 0 && height > 0;
 
-    const x = cursor.x * GRID_SIZE + gridMarginWidth;
-    const y = cursor.y * GRID_SIZE + gridMarginHeight;
+    const x = cursor.x * GRID_SIZE;
+    const y = cursor.y * GRID_SIZE;
 
     return (
       <div className="app" ref={measureRef}>

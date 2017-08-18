@@ -7,6 +7,7 @@ import 'brace/mode/javascript';
 import 'brace/theme/github';
 
 import { upsertBlock } from '../actions';
+import { executeBlockSrc } from '../utils';
 
 const DEFAULT_BLOCK = `
 {
@@ -39,10 +40,6 @@ class UpsertBlock extends Component {
   }
 
   onSave() {
-    /* eslint-disable no-new-func */
-    const executeBlockSrc = blockSrc => new Function(`return ${blockSrc.trim()}`)();
-    /* eslint-enable no-new-func */
-
     try {
       const block = executeBlockSrc(this.state.block);
 
