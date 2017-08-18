@@ -9,7 +9,7 @@ import { withContentRect } from 'react-measure';
 import createGraph from './services/graph';
 import reducer from './reducers';
 import { IS_DEBUG, GRID_SIZE } from './constants';
-import { moveCursor } from './actions';
+import { moveCursor, showNewBlockPrompt } from './actions';
 
 import Blocks from './components/blocks';
 import Board from './components/board';
@@ -42,10 +42,6 @@ class App extends Component {
   constructor() {
     super();
     autobind(this);
-
-    this.state = {
-      newBlock: false
-    };
   }
 
   componentDidMount() {
@@ -68,7 +64,7 @@ class App extends Component {
       j: () => this.props.moveCursor(0, 1),
       k: () => this.props.moveCursor(0, -1),
       l: () => this.props.moveCursor(1, 0),
-      n: () => this.setState({ newBlock: true })
+      n: () => this.props.showNewBlockPrompt()
     };
 
     if (keyFns[key]) {
@@ -77,21 +73,20 @@ class App extends Component {
   }
 
   renderOverlays() {
-    const { overlays } = this.props;
+    const { upsertBlockOverlay } = this.props;
 
     return (
       <div>
-        {overlays.upsertBlock &&
+        {upsertBlockOverlay &&
           <Overlay>
-            <UpsertBlock block={overlays.upsertBlock} />
+            <UpsertBlock block={upsertBlockOverlay} />
           </Overlay>}
       </div>
     );
   }
 
   render() {
-    const { newBlock } = this.state;
-    const { cursor, contentRect, measureRef } = this.props;
+    const { cursor, contentRect, measureRef, newBlockPrompt } = this.props;
     const { width, height } = contentRect.bounds;
 
     const gridWidthCount = Math.floor(width / GRID_SIZE) - 1;
@@ -110,7 +105,7 @@ class App extends Component {
       <div className="app" ref={measureRef}>
         <div style={{ transform: `translate(${gridMarginWidth}px, ${gridMarginHeight}px)` }}>
           {shouldRender && <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={cursor} />}
-          {newBlock && <NewBlock x={x} y={y} />}
+          {newBlockPrompt && <NewBlock x={x} y={y} />}
           <Blocks />
         </div>
 
@@ -122,11 +117,12 @@ class App extends Component {
 
 const mapStateToProps = state => ({
   cursor: state.get('cursor').toJS(),
-  overlays: state.get('overlays').toJS()
+  upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
+  newBlockPrompt: state.getIn(['ui', 'newBlockPrompt'])
 });
 
 const AppMeasured = withContentRect('bounds')(App);
-const AppConnected = connect(mapStateToProps, { moveCursor })(AppMeasured);
+const AppConnected = connect(mapStateToProps, { moveCursor, showNewBlockPrompt })(AppMeasured);
 
 ReactDOM.render(
   <Provider store={store}>

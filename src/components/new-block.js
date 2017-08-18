@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import { connect } from 'react-redux';
 
 import { NEW_BLOCK_NAME } from '../constants';
-import { createBlock } from '../actions';
+import { createBlock, closeNewBlockPrompt } from '../actions';
 
 // has to be a class - required by react-autocomplete
 class NewBlockItem extends Component {
@@ -41,6 +41,14 @@ class NewBlock extends Component {
     this.props.createBlock(blockName);
   }
 
+  onKeyDown(e) {
+    const { key } = e;
+
+    if (key === 'Escape') {
+      this.props.closeNewBlockPrompt();
+    }
+  }
+
   render() {
     const { value } = this.state;
     const { blockSpecs, x, y } = this.props;
@@ -49,6 +57,7 @@ class NewBlock extends Component {
       <div className="new-block" style={{ top: y, left: x }}>
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
+          inputProps={{ onKeyDown: this.onKeyDown }}
           getItemValue={block => block.id}
           items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(blockSpecs)}
           onChange={this.onChange}
@@ -67,4 +76,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps, { createBlock })(NewBlock);
+export default connect(mapStateToProps, { createBlock, closeNewBlockPrompt })(NewBlock);
