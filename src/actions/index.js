@@ -1,4 +1,12 @@
-import { MOVE_CURSOR, CREATE_BLOCK, UPSERT_BLOCK, SHOW_NEW_BLOCK_PROMPT, CLOSE_NEW_BLOCK_PROMPT } from '../constants';
+import {
+  MOVE_CURSOR,
+  CREATE_BLOCK,
+  UPSERT_BLOCK,
+  SHOW_NEW_BLOCK_PROMPT,
+  CLOSE_NEW_BLOCK_PROMPT,
+  CONNECT_INPUTS,
+  CONNECT_OUTPUTS
+} from '../constants';
 
 export const moveCursor = (x, y) => ({
   type: MOVE_CURSOR,
@@ -21,4 +29,14 @@ export const showNewBlockPrompt = () => ({
 
 export const closeNewBlockPrompt = () => ({
   type: CLOSE_NEW_BLOCK_PROMPT
+});
+
+export const connectInputs = (blockId, inputName) => ({
+  type: CONNECT_INPUTS,
+  payload: { blockId, inputName }
+});
+
+export const connectOutputs = (blockId, inputName) => ({
+  type: CONNECT_OUTPUTS,
+  payload: { blockId, inputName }
 });

@@ -9,7 +9,7 @@ import { withContentRect } from 'react-measure';
 import createGraph from './services/graph';
 import reducer from './reducers';
 import { IS_DEBUG, GRID_SIZE } from './constants';
-import { moveCursor, showNewBlockPrompt } from './actions';
+import { moveCursor, showNewBlockPrompt, connectOutputs, connectInputs } from './actions';
 
 import Blocks from './components/blocks';
 import Board from './components/board';
@@ -52,6 +52,20 @@ class App extends Component {
     document.removeEventListener('keydown', this.onKeydown);
   }
 
+  makeConnections() {
+    const { hoveredBlock } = this.props;
+
+    if (!hoveredBlock) {
+      return;
+    }
+
+    if (hoveredBlock.type === 'input') {
+      this.props.connectOutputs(hoveredBlock.id, hoveredBlock.name);
+    } else if (hoveredBlock.type === 'output') {
+      this.props.connectInputs(hoveredBlock.id, hoveredBlock.name);
+    }
+  }
+
   onKeydown(e) {
     const { key, target } = e;
 
@@ -64,7 +78,8 @@ class App extends Component {
       j: () => this.props.moveCursor(0, 1),
       k: () => this.props.moveCursor(0, -1),
       l: () => this.props.moveCursor(1, 0),
-      n: () => this.props.showNewBlockPrompt()
+      n: () => this.props.showNewBlockPrompt(),
+      c: () => this.makeConnections()
     };
 
     if (keyFns[key]) {
@@ -115,14 +130,25 @@ class App extends Component {
   }
 }
 
-const mapStateToProps = state => ({
-  cursor: state.get('cursor').toJS(),
-  upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
-  newBlockPrompt: state.getIn(['ui', 'newBlockPrompt'])
-});
+const mapStateToProps = state => {
+  const hoveredBlock = state.getIn(['graph', 'blocks']).find(block => block.get('hovered') !== false);
+
+  return {
+    cursor: state.get('cursor').toJS(),
+    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
+    newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
+    hoveredBlock: hoveredBlock ? { ...hoveredBlock.get('hovered').toJS(), id: hoveredBlock.get('id') } : null
+  };
+};
 
 const AppMeasured = withContentRect('bounds')(App);
-const AppConnected = connect(mapStateToProps, { moveCursor, showNewBlockPrompt })(AppMeasured);
+
+const AppConnected = connect(mapStateToProps, {
+  moveCursor,
+  showNewBlockPrompt,
+  connectInputs,
+  connectOutputs
+})(AppMeasured);
 
 ReactDOM.render(
   <Provider store={store}>

@@ -8,7 +8,9 @@ import {
   UPSERT_BLOCK,
   NEW_BLOCK_NAME,
   SHOW_NEW_BLOCK_PROMPT,
-  CLOSE_NEW_BLOCK_PROMPT
+  CLOSE_NEW_BLOCK_PROMPT,
+  CONNECT_INPUTS,
+  CONNECT_OUTPUTS
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -173,7 +175,16 @@ export default (state = initialState, action) => {
     state = state.setIn(['ui', 'newBlockPrompt'], false);
   }
 
-  // FIXME: blockSpecs[].code doesn't stringify...
+  if (type === CONNECT_INPUTS) {
+    // TODO
+    console.log('TODO: connect inputs', payload)
+  }
+
+  if (type === CONNECT_OUTPUTS) {
+    // TODO
+    console.log('TODO: connect outputs', payload)
+  }
+
   if (IS_DEBUG && state) {
     localStorage.setItem('state', stringifyState(state.toJS()));
   }
