@@ -12,7 +12,7 @@ const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
   };
 };
 
-const IGNORE_PATH_KEYS = ['hovered'];
+const IGNORE_PATH_KEYS = ['hovered', 'ui'];
 
 class Graph {
   constructor(store) {

@@ -68,6 +68,14 @@ class App extends Component {
 
   onKeydown(e) {
     const { key, target } = e;
+    const { connectingInputs, connectingOutputs } = this.props;
+
+    if (connectingInputs) {
+      // TODO: route through store and connect...
+      console.log('connect input', key);
+
+      return;
+    }
 
     if (target.localName !== 'body') {
       return;
@@ -133,11 +141,16 @@ class App extends Component {
 const mapStateToProps = state => {
   const hoveredBlock = state.getIn(['graph', 'blocks']).find(block => block.get('hovered') !== false);
 
+  const connectInputs = state.getIn(['ui', 'connectInputs']);
+  const connectOutputs = state.getIn(['ui', 'connectOutputs']);
+
   return {
     cursor: state.get('cursor').toJS(),
     upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
     newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
-    hoveredBlock: hoveredBlock ? { ...hoveredBlock.get('hovered').toJS(), id: hoveredBlock.get('id') } : null
+    hoveredBlock: hoveredBlock ? { ...hoveredBlock.get('hovered').toJS(), id: hoveredBlock.get('id') } : null,
+    connectingInputs: connectInputs ? connectInputs.toJS() : false,
+    connectingOutputs: connectOutputs ? connectOutputs.toJS() : false
   };
 };
 

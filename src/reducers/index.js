@@ -1,5 +1,7 @@
 import { fromJS } from 'immutable';
 import uuid from 'uuid/v4';
+import times from 'lodash.times';
+import leftPad from 'left-pad';
 
 import {
   IS_DEBUG,
@@ -59,7 +61,9 @@ let initialState = fromJS({
   },
   ui: {
     upsertBlockOverlay: false,
-    newBlockPrompt: false
+    newBlockPrompt: false,
+    connectInputs: false,
+    connectOutputs: false
   }
 });
 
@@ -90,9 +94,22 @@ const createBlockOnBoard = (state, block) => {
     fromJS({
       id,
       name: block,
-      position: state.get('cursor').toJS()
+      position: state.get('cursor').toJS(),
+      hovered: { type: 'block' }
     })
   );
+};
+
+const ALPHABET_LETTERS = 26;
+const generateLetterCodes = num => {
+  const longestWord = num.toString(ALPHABET_LETTERS).length;
+
+  return times(num).map(i => {
+    return leftPad(i.toString(ALPHABET_LETTERS), longestWord, 0) // convert to base-26
+      .split('')
+      .map(str => String.fromCharCode(97 + parseInt(str, ALPHABET_LETTERS))) // make each letter a-z
+      .join('');
+  });
 };
 
 export default (state = initialState, action) => {
@@ -102,6 +119,7 @@ export default (state = initialState, action) => {
     state = state.update('cursor', cursor => cursor.update('x', x => x + payload.x).update('y', y => y + payload.y));
 
     // TODO: make this work on whole width of the block, not just most-left part
+    // TODO: move 'hovered' to 'ui.hovered'
     const newBlocks = state.getIn(['graph', 'blocks']).map(block => {
       const xAxisMatches = block.getIn(['position', 'x']) === state.getIn(['cursor', 'x']);
 
@@ -176,13 +194,37 @@ export default (state = initialState, action) => {
   }
 
   if (type === CONNECT_INPUTS) {
-    // TODO
-    console.log('TODO: connect inputs', payload)
+    state = state.setIn(['ui', 'connectInputs'], fromJS(payload));
+
+    const inputsCount = state
+      .getIn(['graph', 'blocks'])
+      .filter(block => block.get('id') !== payload.blockId)
+      .reduce((memo, block) => {
+        const { inputs } = state.getIn(['blockSpecs', block.get('name')]);
+        return memo + (inputs || []).length;
+      }, 0);
+
+    const letters = generateLetterCodes(inputsCount);
+    let letterCounter = 0;
+
+    const newBlocks = state.getIn(['graph', 'blocks']).map(block => {
+      if (block.get('id') === payload.blockId) {
+        return block;
+      }
+
+      const { inputs } = state.getIn(['blockSpecs', block.get('name')]);
+
+      return block.setIn(
+        ['ui', 'inputLetterHovers'],
+        fromJS(inputs.reduce((memo, key) => ({ ...memo, [key]: letters[letterCounter++] }), {}))
+      );
+    });
+
+    state = state.setIn(['graph', 'blocks'], newBlocks);
   }
 
   if (type === CONNECT_OUTPUTS) {
-    // TODO
-    console.log('TODO: connect outputs', payload)
+    state = state.setIn(['ui', 'connectOutputs'], fromJS(payload));
   }
 
   if (IS_DEBUG && state) {
