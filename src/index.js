@@ -9,7 +9,15 @@ import { withContentRect } from 'react-measure';
 import createGraph from './services/graph';
 import reducer from './reducers';
 import { IS_DEBUG, GRID_SIZE } from './constants';
-import { moveCursor, showNewBlockPrompt, connectOutputs, connectInputs } from './actions';
+
+import {
+  moveCursor,
+  showNewBlockPrompt,
+  connectOutputs,
+  connectInputs,
+  connectOutputLetter,
+  connectInputLetter
+} from './actions';
 
 import Blocks from './components/blocks';
 import Board from './components/board';
@@ -70,14 +78,19 @@ class App extends Component {
     const { key, target } = e;
     const { connectingInputs, connectingOutputs } = this.props;
 
-    if (connectingInputs) {
-      // TODO: route through store and connect...
-      console.log('connect input', key);
-
+    if (target.localName !== 'body') {
       return;
     }
 
-    if (target.localName !== 'body') {
+    // TODO: if not-letter then cancel
+    if (connectingInputs) {
+      this.props.connectInputLetter(key);
+      return;
+    }
+
+    // TODO: if not-letter then cancel
+    if (connectingOutputs) {
+      this.props.connectOutputLetter(key);
       return;
     }
 
@@ -160,7 +173,9 @@ const AppConnected = connect(mapStateToProps, {
   moveCursor,
   showNewBlockPrompt,
   connectInputs,
-  connectOutputs
+  connectOutputs,
+  connectInputLetter,
+  connectOutputLetter,
 })(AppMeasured);
 
 ReactDOM.render(

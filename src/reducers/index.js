@@ -12,7 +12,9 @@ import {
   SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
   CONNECT_INPUTS,
-  CONNECT_OUTPUTS
+  CONNECT_OUTPUTS,
+  CONNECT_INPUT_LETTER,
+  CONNECT_OUTPUT_LETTER
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -63,7 +65,9 @@ let initialState = fromJS({
     upsertBlockOverlay: false,
     newBlockPrompt: false,
     connectInputs: false,
-    connectOutputs: false
+    connectOutputs: false,
+    connectInputLetters: '',
+    connectOutputLetters: ''
   }
 });
 
@@ -98,6 +102,15 @@ const createBlockOnBoard = (state, block) => {
       hovered: { type: 'block' }
     })
   );
+};
+
+const clearConnectState = state => {
+  return state
+    .updateIn(['graph', 'blocks'], blocks =>
+      blocks.map(block => block.deleteIn(['ui', 'inputLetterHovers']).deleteIn(['ui', 'outputLetterHovers']))
+    )
+    .setIn(['ui', 'connectInputs'], false)
+    .setIn(['ui', 'connectOutputs'], false);
 };
 
 const ALPHABET_LETTERS = 26;
@@ -225,6 +238,53 @@ export default (state = initialState, action) => {
 
   if (type === CONNECT_OUTPUTS) {
     state = state.setIn(['ui', 'connectOutputs'], fromJS(payload));
+  }
+
+  if (type === CONNECT_INPUT_LETTER) {
+    state = state.updateIn(['ui', 'connectInputLetters'], connectInputLetters => connectInputLetters + payload.letter);
+
+    const letterCodes = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
+      const inputLetterHovers = block.getIn(['ui', 'inputLetterHovers']);
+
+      if (!inputLetterHovers) {
+        return memo;
+      }
+
+      return memo.concat(
+        inputLetterHovers.map((letter, input) => ({ blockId: block.get('id'), letter, input })).valueSeq().toJS()
+      );
+    }, []);
+
+    if (!letterCodes.length) {
+      return state.setIn(['ui', 'connectInputLetters'], '').update(state => clearConnectState(state));
+    }
+
+    const letterCodeLength = letterCodes[0].letter.length;
+    const typedLetters = state.getIn(['ui', 'connectInputLetters']);
+    const typedLettersLength = state.getIn(['ui', 'connectInputLetters']).length;
+
+    if (typedLettersLength > letterCodeLength) {
+      return state.setIn(['ui', 'connectInputLetters'], '').update(state => clearConnectState(state));
+    } else if (typedLettersLength < letterCodeLength) {
+      return state;
+    } else {
+      const matchingInput = letterCodes.find(({ letter }) => letter === typedLetters);
+      const id = uuid();
+
+      return state
+        .setIn(
+          ['graph', 'connections', id],
+          fromJS({
+            id,
+            toId: matchingInput.blockId,
+            toInput: matchingInput.input
+            // TODO:
+            // fromId:
+            // fromOutput:
+          })
+        )
+        .update(state => clearConnectState(state));
+    }
   }
 
   if (IS_DEBUG && state) {

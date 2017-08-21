@@ -23,7 +23,7 @@
     "uuid": "^3.1.0"
   },
   "scripts": {
-    "start": "BROWSER=none react-scripts start",
+    "start": "FORCE_COLOR=true BROWSER=none react-scripts start | cat -",
     "build": "react-scripts build",
     "eject": "react-scripts eject"
   }
