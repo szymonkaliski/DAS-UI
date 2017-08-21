@@ -175,7 +175,7 @@ const AppConnected = connect(mapStateToProps, {
   connectInputs,
   connectOutputs,
   connectInputLetter,
-  connectOutputLetter,
+  connectOutputLetter
 })(AppMeasured);
 
 ReactDOM.render(
