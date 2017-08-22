@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 
 import { GRID_SIZE } from '../constants';
 
-const Input = ({ i, name, isHovered, isConnecting, connectingLetter }) => {
+const Input = ({ i, name, isHovered, connectingLetter }) => {
   return (
     <div
       className={classnames('block__input', { 'block__input--hovered': isHovered })}
@@ -13,13 +13,13 @@ const Input = ({ i, name, isHovered, isConnecting, connectingLetter }) => {
         top: (i + 1) * GRID_SIZE * -1
       }}
     >
-      {isConnecting ? `[${connectingLetter}] ` : ''}
+      {connectingLetter ? `[${connectingLetter}] ` : ''}
       {name}
     </div>
   );
 };
 
-const Output = ({ i, name, isHovered, isConnecting, connectingLetter }) => {
+const Output = ({ i, name, isHovered, connectingLetter }) => {
   return (
     <div
       className={classnames('block__output', { 'block__output--hovered': isHovered })}
@@ -27,19 +27,31 @@ const Output = ({ i, name, isHovered, isConnecting, connectingLetter }) => {
         top: (i + 1) * GRID_SIZE
       }}
     >
-      {isConnecting ? `[${connectingLetter}] ` : ''}
+      {connectingLetter ? `[${connectingLetter}] ` : ''}
       {name}
     </div>
   );
 };
 
-const Block = ({ block, spec, cursor, connectingInputs, connectingOutputs }) => {
+const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInput, isConnectingFromOutput }) => {
   const blockWidth = 5; // TODO: block width should be measured if it has custom UI? how?
+
+  const outputLetterHovers =
+    isConnectingFromInput &&
+    letterHovers
+      .filter(({ blockId }) => blockId === block.id)
+      .reduce((memo, { code, output }) => ({ ...memo, [output]: code }), {});
+
+  const inputLetterHovers =
+    isConnectingFromInput &&
+    letterHovers
+      .filter(({ blockId }) => blockId === block.id)
+      .reduce((memo, { code, input }) => ({ ...memo, [input]: code }), {});
 
   return (
     <div
       className={classnames('block__wrapper', {
-        'block__wrapper--hovered': get(block, ['hovered', 'type']) === 'block'
+        'block__wrapper--hovered': get(hovered, 'type') === 'block'
       })}
       style={{
         top: block.position.y * GRID_SIZE,
@@ -55,9 +67,8 @@ const Block = ({ block, spec, cursor, connectingInputs, connectingOutputs }) => 
             i={i}
             key={input}
             name={input}
-            isHovered={get(block, ['hovered', 'type']) === 'input' && get(block, ['hovered', 'name']) === input}
-            isConnecting={connectingInputs && block.id !== connectingInputs.blockId}
-            connectingLetter={connectingInputs && get(block, ['ui', 'inputLetterHovers', input])}
+            isHovered={get(hovered, 'type') === 'input' && get(hovered, 'input') === input}
+            connectingLetter={get(inputLetterHovers, input)}
           />
         )}
 
@@ -67,9 +78,8 @@ const Block = ({ block, spec, cursor, connectingInputs, connectingOutputs }) => 
             i={i}
             key={output}
             name={output}
-            isHovered={get(block, ['hovered', 'type']) === 'output' && get(block, ['hovered', 'name']) === output}
-            isConnecting={connectingOutputs && block.id !== connectingOutputs.blockId}
-            connectingLetter={connectingInputs && get(block, ['ui', 'outputLetterHovers', output])}
+            isHovered={get(hovered, 'type') === 'output' && get(hovered, 'output') === output}
+            connectingLetter={get(outputLetterHovers, output)}
           />
         )}
       {block.name}
@@ -77,7 +87,15 @@ const Block = ({ block, spec, cursor, connectingInputs, connectingOutputs }) => 
   );
 };
 
-const Blocks = ({ blockSpecs, blocks, cursor, connectingInputs, connectingOutputs }) => {
+const Blocks = ({
+  blockSpecs,
+  blocks,
+  cursor,
+  hovered,
+  letterHovers,
+  isConnectingFromInput,
+  isConnectingFromOutput
+}) => {
   return (
     <div>
       {blocks.map(block =>
@@ -86,8 +104,10 @@ const Blocks = ({ blockSpecs, blocks, cursor, connectingInputs, connectingOutput
           block={block}
           cursor={cursor}
           spec={blockSpecs[block.name]}
-          connectingInputs={connectingInputs}
-          connectingOutputs={connectingOutputs}
+          hovered={hovered.blockId === block.id && hovered}
+          letterHovers={letterHovers}
+          isConnectingFromInput={isConnectingFromInput}
+          isConnectingFromOutput={isConnectingFromOutput}
         />
       )}
     </div>
@@ -95,15 +115,19 @@ const Blocks = ({ blockSpecs, blocks, cursor, connectingInputs, connectingOutput
 };
 
 const mapStateToProps = state => {
-  const connectInputs = state.getIn(['ui', 'connectInputs']);
-  const connectOutputs = state.getIn(['ui', 'connectOutputs']);
+  const hovered = state.getIn(['ui', 'hovered']);
+  const isConnecting = !!state.getIn(['ui', 'newConnection']);
+  const letterHovers = isConnecting && state.getIn(['ui', 'newConnection', 'possibleConnections']).valueSeq().toJS();
 
   return {
     blockSpecs: state.get('blockSpecs').toJS(),
     blocks: state.getIn(['graph', 'blocks']).valueSeq().toJS(),
     cursor: state.get('cursor').toJS(),
-    connectingInputs: connectInputs ? connectInputs.toJS() : false,
-    connectingOutputs: connectOutputs ? connectOutputs.toJS() : false
+
+    hovered: hovered ? hovered.toJS() : false,
+    letterHovers,
+    isConnectingFromInput: isConnecting && hovered.get('input'),
+    isConnectingFromOutput: isConnecting && hovered.get('output')
   };
 };
 

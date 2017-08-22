@@ -11,10 +11,10 @@ import {
   NEW_BLOCK_NAME,
   SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
-  CONNECT_INPUTS,
-  CONNECT_OUTPUTS,
-  CONNECT_INPUT_LETTER,
-  CONNECT_OUTPUT_LETTER
+  CONNECT_FROM_INPUT,
+  CONNECT_FROM_OUTPUT,
+  CONNECT_FROM_INPUT_TYPED_LETTER,
+  CONNECT_FROM_OUTPUT_TYPED_LETTER
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -62,12 +62,10 @@ let initialState = fromJS({
     connections: {}
   },
   ui: {
+    hovered: false,
     upsertBlockOverlay: false,
     newBlockPrompt: false,
-    connectInputs: false,
-    connectOutputs: false,
-    connectInputLetters: '',
-    connectOutputLetters: ''
+    newConnection: false
   }
 });
 
@@ -104,15 +102,6 @@ const createBlockOnBoard = (state, block) => {
   );
 };
 
-const clearConnectState = state => {
-  return state
-    .updateIn(['graph', 'blocks'], blocks =>
-      blocks.map(block => block.deleteIn(['ui', 'inputLetterHovers']).deleteIn(['ui', 'outputLetterHovers']))
-    )
-    .setIn(['ui', 'connectInputs'], false)
-    .setIn(['ui', 'connectOutputs'], false);
-};
-
 const ALPHABET_LETTERS = 26;
 const generateLetterCodes = num => {
   const longestWord = num.toString(ALPHABET_LETTERS).length;
@@ -128,23 +117,29 @@ const generateLetterCodes = num => {
 export default (state = initialState, action) => {
   const { type, payload } = action;
 
+  console.info(`action: ${type}`, payload);
+
   if (type === MOVE_CURSOR) {
     state = state.update('cursor', cursor => cursor.update('x', x => x + payload.x).update('y', y => y + payload.y));
 
     // TODO: make this work on whole width of the block, not just most-left part
-    // TODO: move 'hovered' to 'ui.hovered'
-    const newBlocks = state.getIn(['graph', 'blocks']).map(block => {
+    const hovered = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
+      // first match wins
+      if (memo) {
+        return memo;
+      }
+
       const xAxisMatches = block.getIn(['position', 'x']) === state.getIn(['cursor', 'x']);
 
       if (!xAxisMatches) {
-        return block.set('hovered', false);
+        return memo;
       }
 
       const blockSpec = state.getIn(['blockSpecs', block.get('name')]);
       const blockHovered = block.get('position').equals(state.get('cursor'));
 
       if (blockHovered) {
-        return block.set('hovered', fromJS({ type: 'block' }));
+        return { type: 'block', blockId: block.get('id') };
       }
 
       const inputHoveredIdx = blockSpec.inputs.slice().reverse().findIndex((_, index) => {
@@ -153,7 +148,7 @@ export default (state = initialState, action) => {
       const inputHovered = inputHoveredIdx >= 0 ? blockSpec.inputs.slice().reverse()[inputHoveredIdx] : false;
 
       if (inputHovered) {
-        return block.set('hovered', fromJS({ type: 'input', name: inputHovered }));
+        return { type: 'input', blockId: block.get('id'), input: inputHovered };
       }
 
       const outputHoveredIdx = blockSpec.outputs.findIndex((_, index) => {
@@ -162,13 +157,13 @@ export default (state = initialState, action) => {
       const outputHovered = outputHoveredIdx >= 0 ? blockSpec.outputs[outputHoveredIdx] : false;
 
       if (outputHovered) {
-        return block.set('hovered', fromJS({ type: 'output', name: outputHovered }));
+        return { type: 'output', blockId: block.get('id'), output: outputHovered };
       }
 
-      return block;
-    });
+      return memo;
+    }, undefined);
 
-    state = state.setIn(['graph', 'blocks'], newBlocks);
+    state = state.setIn(['ui', 'hovered'], fromJS(hovered));
   }
 
   if (type === UPSERT_BLOCK) {
@@ -176,10 +171,7 @@ export default (state = initialState, action) => {
 
     const creatingNewBlock = state.getIn(['ui', 'upsertBlockOverlay']) === NEW_BLOCK_NAME;
 
-    state = state
-      .setIn(['blockSpecs', block.name], block)
-      .setIn(['ui', 'upsertBlockOverlay'], false)
-      .setIn(['ui', 'newBlockPrompt'], false);
+    state = state.setIn(['blockSpecs', block.name], block).setIn(['ui', 'upsertBlockOverlay'], false);
 
     if (creatingNewBlock) {
       state = createBlockOnBoard(state, block.name);
@@ -196,6 +188,8 @@ export default (state = initialState, action) => {
       // create on graph if using one of available blocks
       state = createBlockOnBoard(state, block);
     }
+
+    state = state.setIn(['ui', 'newBlockPrompt'], false);
   }
 
   if (type === SHOW_NEW_BLOCK_PROMPT) {
@@ -206,69 +200,73 @@ export default (state = initialState, action) => {
     state = state.setIn(['ui', 'newBlockPrompt'], false);
   }
 
-  if (type === CONNECT_INPUTS) {
-    state = state.setIn(['ui', 'connectInputs'], fromJS(payload));
-
+  if (type === CONNECT_FROM_INPUT) {
     const inputsCount = state
       .getIn(['graph', 'blocks'])
       .filter(block => block.get('id') !== payload.blockId)
       .reduce((memo, block) => {
-        const { inputs } = state.getIn(['blockSpecs', block.get('name')]);
-        return memo + (inputs || []).length;
+        const { outputs } = state.getIn(['blockSpecs', block.get('name')]);
+        return memo + (outputs || []).length;
       }, 0);
 
     const letters = generateLetterCodes(inputsCount);
     let letterCounter = 0;
 
-    const newBlocks = state.getIn(['graph', 'blocks']).map(block => {
+    const possibleConnections = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
       if (block.get('id') === payload.blockId) {
-        return block;
-      }
-
-      const { inputs } = state.getIn(['blockSpecs', block.get('name')]);
-
-      return block.setIn(
-        ['ui', 'inputLetterHovers'],
-        fromJS(inputs.reduce((memo, key) => ({ ...memo, [key]: letters[letterCounter++] }), {}))
-      );
-    });
-
-    state = state.setIn(['graph', 'blocks'], newBlocks);
-  }
-
-  if (type === CONNECT_OUTPUTS) {
-    state = state.setIn(['ui', 'connectOutputs'], fromJS(payload));
-  }
-
-  if (type === CONNECT_INPUT_LETTER) {
-    state = state.updateIn(['ui', 'connectInputLetters'], connectInputLetters => connectInputLetters + payload.letter);
-
-    const letterCodes = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
-      const inputLetterHovers = block.getIn(['ui', 'inputLetterHovers']);
-
-      if (!inputLetterHovers) {
         return memo;
       }
 
-      return memo.concat(
-        inputLetterHovers.map((letter, input) => ({ blockId: block.get('id'), letter, input })).valueSeq().toJS()
+      const { outputs } = state.getIn(['blockSpecs', block.get('name')]);
+
+      const blockConnections = outputs.reduce((memo, key) => {
+        const code = letters[letterCounter++];
+
+        return {
+          ...memo,
+          [code]: {
+            blockId: block.get('id'),
+            code,
+            output: key
+          }
+        };
+      }, {});
+
+      return {
+        ...memo,
+        ...blockConnections
+      };
+    }, {});
+
+    if (Object.keys(possibleConnections).length > 0) {
+      state = state.setIn(
+        ['ui', 'newConnection'],
+        fromJS({
+          typed: '',
+          from: {
+            blockId: payload.blockId,
+            input: payload.input
+          },
+          possibleConnections
+        })
       );
-    }, []);
-
-    if (!letterCodes.length) {
-      return state.setIn(['ui', 'connectInputLetters'], '').update(state => clearConnectState(state));
     }
+  }
 
-    const letterCodeLength = letterCodes[0].letter.length;
-    const typedLetters = state.getIn(['ui', 'connectInputLetters']);
-    const typedLettersLength = state.getIn(['ui', 'connectInputLetters']).length;
+  if (type === CONNECT_FROM_INPUT_TYPED_LETTER) {
+    state = state.updateIn(['ui', 'newConnection', 'typed'], typed => typed + payload.letter);
 
-    if (typedLettersLength > letterCodeLength) {
-      return state.setIn(['ui', 'connectInputLetters'], '').update(state => clearConnectState(state));
-    } else if (typedLettersLength < letterCodeLength) {
+    const letterCodes = state.getIn(['ui', 'newConnection', 'possibleConnections']);
+    const letterCodeLength = letterCodes.first().length;
+
+    const typedLetters = state.getIn(['ui', 'newConnection', 'typed']);
+
+    if (typedLetters.length > letterCodeLength) {
+      return state.setIn(['ui', 'newConnection'], false);
+    } else if (typedLetters.length < letterCodeLength) {
       return state;
     } else {
-      const matchingInput = letterCodes.find(({ letter }) => letter === typedLetters);
+      const matchingOutput = letterCodes.get(typedLetters);
       const id = uuid();
 
       return state
@@ -276,14 +274,13 @@ export default (state = initialState, action) => {
           ['graph', 'connections', id],
           fromJS({
             id,
-            toId: matchingInput.blockId,
-            toInput: matchingInput.input
-            // TODO:
-            // fromId:
-            // fromOutput:
+            fromId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
+            fromInput: state.getIn(['ui', 'newConnection', 'from', 'input']),
+            toId: matchingOutput.get('blockId'),
+            toOutput: matchingOutput.get('output')
           })
         )
-        .update(state => clearConnectState(state));
+        .setIn(['ui', 'newConnection'], false);
     }
   }
 

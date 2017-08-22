@@ -4,10 +4,10 @@ import {
   UPSERT_BLOCK,
   SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
-  CONNECT_INPUTS,
-  CONNECT_OUTPUTS,
-  CONNECT_INPUT_LETTER,
-  CONNECT_OUTPUT_LETTER,
+  CONNECT_FROM_INPUT,
+  CONNECT_FROM_OUTPUT,
+  CONNECT_FROM_INPUT_TYPED_LETTER,
+  CONNECT_FROM_OUTPUT_TYPED_LETTER
 } from '../constants';
 
 export const moveCursor = (x, y) => ({
@@ -33,22 +33,22 @@ export const closeNewBlockPrompt = () => ({
   type: CLOSE_NEW_BLOCK_PROMPT
 });
 
-export const connectInputs = (blockId, inputName) => ({
-  type: CONNECT_INPUTS,
-  payload: { blockId, inputName }
+export const connectFromInput = (blockId, input) => ({
+  type: CONNECT_FROM_INPUT,
+  payload: { blockId, input }
 });
 
-export const connectOutputs = (blockId, inputName) => ({
-  type: CONNECT_OUTPUTS,
-  payload: { blockId, inputName }
+export const connectFromOutput = (blockId, output) => ({
+  type: CONNECT_FROM_OUTPUT,
+  payload: { blockId, output }
 });
 
-export const connectInputLetter = letter => ({
-  type: CONNECT_INPUT_LETTER,
+export const connectFromInputTypedLetter = letter => ({
+  type: CONNECT_FROM_INPUT_TYPED_LETTER,
   payload: { letter }
 });
 
-export const connectOutputLetter = letter => ({
-  type: CONNECT_OUTPUT_LETTER,
+export const connectFromOutputTypedLetter = letter => ({
+  type: CONNECT_FROM_OUTPUT_TYPED_LETTER,
   payload: { letter }
 });

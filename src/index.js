@@ -13,10 +13,10 @@ import { IS_DEBUG, GRID_SIZE } from './constants';
 import {
   moveCursor,
   showNewBlockPrompt,
-  connectOutputs,
-  connectInputs,
-  connectOutputLetter,
-  connectInputLetter
+  connectFromOutput,
+  connectFromInput,
+  connectFromInputTypedLetter,
+  connectFromOutputTypedLetter
 } from './actions';
 
 import Blocks from './components/blocks';
@@ -61,36 +61,38 @@ class App extends Component {
   }
 
   makeConnections() {
-    const { hoveredBlock } = this.props;
+    const { hovered } = this.props;
 
-    if (!hoveredBlock) {
+    console.log('hovered');
+
+    if (!hovered) {
       return;
     }
 
-    if (hoveredBlock.type === 'input') {
-      this.props.connectOutputs(hoveredBlock.id, hoveredBlock.name);
-    } else if (hoveredBlock.type === 'output') {
-      this.props.connectInputs(hoveredBlock.id, hoveredBlock.name);
+    if (hovered.type === 'input') {
+      this.props.connectFromInput(hovered.blockId, hovered.input);
+    } else if (hovered.type === 'output') {
+      this.props.connectFromOutput(hovered.blockId, hovered.output);
     }
   }
 
   onKeydown(e) {
     const { key, target } = e;
-    const { connectingInputs, connectingOutputs } = this.props;
+    const { isConnectingFromInput, isConnectingFromOutput } = this.props;
 
     if (target.localName !== 'body') {
       return;
     }
 
     // TODO: if not-letter then cancel
-    if (connectingInputs) {
-      this.props.connectInputLetter(key);
+    if (isConnectingFromInput) {
+      this.props.connectFromInputTypedLetter(key);
       return;
     }
 
     // TODO: if not-letter then cancel
-    if (connectingOutputs) {
-      this.props.connectOutputLetter(key);
+    if (isConnectingFromOutput) {
+      this.props.connectFromOutputTypedLetter(key);
       return;
     }
 
@@ -152,18 +154,16 @@ class App extends Component {
 }
 
 const mapStateToProps = state => {
-  const hoveredBlock = state.getIn(['graph', 'blocks']).find(block => block.get('hovered') !== false);
-
-  const connectInputs = state.getIn(['ui', 'connectInputs']);
-  const connectOutputs = state.getIn(['ui', 'connectOutputs']);
+  const hovered = state.getIn(['ui', 'hovered']);
+  const isConnecting = !!state.getIn(['ui', 'newConnection']);
 
   return {
     cursor: state.get('cursor').toJS(),
-    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
+    hovered: hovered ? hovered.toJS() : null,
+    isConnectingFromInput: isConnecting && hovered.get('input'),
+    isConnectingFromOutput: isConnecting && hovered.get('output'),
     newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
-    hoveredBlock: hoveredBlock ? { ...hoveredBlock.get('hovered').toJS(), id: hoveredBlock.get('id') } : null,
-    connectingInputs: connectInputs ? connectInputs.toJS() : false,
-    connectingOutputs: connectOutputs ? connectOutputs.toJS() : false
+    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay'])
   };
 };
 
@@ -172,10 +172,10 @@ const AppMeasured = withContentRect('bounds')(App);
 const AppConnected = connect(mapStateToProps, {
   moveCursor,
   showNewBlockPrompt,
-  connectInputs,
-  connectOutputs,
-  connectInputLetter,
-  connectOutputLetter
+  connectFromOutput,
+  connectFromInput,
+  connectFromInputTypedLetter,
+  connectFromOutputTypedLetter
 })(AppMeasured);
 
 ReactDOM.render(

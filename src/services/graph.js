@@ -12,7 +12,7 @@ const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
   };
 };
 
-const IGNORE_PATH_KEYS = ['hovered', 'ui'];
+const IGNORED_PATH_KEYS = ['position'];
 
 class Graph {
   constructor(store) {
@@ -60,9 +60,9 @@ class Graph {
 
       diff.forEach(singleDiff => {
         const op = ops[singleDiff.get('op')];
-        const isIgnored = IGNORE_PATH_KEYS.some(key => singleDiff.get('path').contains(key));
+        const isKeyIgnored = IGNORED_PATH_KEYS.some(key => singleDiff.get('path').contains(key));
 
-        if (isIgnored) {
+        if (isKeyIgnored) {
           console.info('ignornig diff', { diff: diff.toJS() });
           return;
         }
