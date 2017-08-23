@@ -54,10 +54,6 @@
   width: 100%;
 }
 
-.new-block {
-  position: absolute;
-}
-
 .new-block__item {
   background: #EEE;
 }
@@ -78,13 +74,13 @@
 
 .block__input {
   position: absolute;
-  background: yellow;
+  background: darksalmon;
   border: 1px solid #eee;
 }
 
 .block__output {
   position: absolute;
-  background: blue;
+  background: steelblue;
   border: 1px solid #eee;
 }
 

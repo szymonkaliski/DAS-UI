@@ -54,7 +54,7 @@ class NewBlock extends Component {
     const { blockSpecs, x, y } = this.props;
 
     return (
-      <div className="new-block" style={{ top: y, left: x }}>
+      <div className="new-block" style={{ transform: `translate(${x}px, ${y}px)` }}>
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
           inputProps={{ onKeyDown: this.onKeyDown }}

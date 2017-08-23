@@ -37,7 +37,9 @@ const mapStateToProps = state => {
 
         const fromPosition = {
           x: fromBlock.getIn(['position', 'x']),
-          y: fromBlock.getIn(['position', 'y']) - (fromSpec.inputs.indexOf(connection.get('fromInput')) + 1)
+          y:
+            fromBlock.getIn(['position', 'y']) -
+            (fromSpec.inputs.length - fromSpec.inputs.indexOf(connection.get('fromInput')) - 1)
         };
 
         const toPosition = {

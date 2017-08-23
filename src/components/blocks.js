@@ -40,13 +40,13 @@ const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInp
     isConnectingFromInput &&
     letterHovers
       .filter(({ blockId }) => blockId === block.id)
-      .reduce((memo, { code, output }) => ({ ...memo, [output]: code }), {});
+      .reduce((memo, { code, connector }) => ({ ...memo, [connector]: code }), {});
 
   const inputLetterHovers =
-    isConnectingFromInput &&
+    isConnectingFromOutput &&
     letterHovers
       .filter(({ blockId }) => blockId === block.id)
-      .reduce((memo, { code, input }) => ({ ...memo, [input]: code }), {});
+      .reduce((memo, { code, connector }) => ({ ...memo, [connector]: code }), {});
 
   return (
     <div

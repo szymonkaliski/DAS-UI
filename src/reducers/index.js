@@ -114,6 +114,111 @@ const generateLetterCodes = num => {
   });
 };
 
+const CONNECTION_TYPES = {
+  INPUT_TO_OUTPUT: 'INPUT_TO_OUTPUT',
+  OUTPUT_TO_INPUT: 'OUTPUT_TO_INPUT'
+};
+
+const generateConnectionState = (state, blockId, connector, type) => {
+  const connectToKey = type === CONNECTION_TYPES.INPUT_TO_OUTPUT ? 'outputs' : 'inputs';
+
+  const possibleConnectionsCount = state
+    .getIn(['graph', 'blocks'])
+    .filter(block => block.get('id') !== blockId)
+    .reduce((memo, block) => {
+      const blockSpec = state.getIn(['blockSpecs', block.get('name')]);
+      return memo + (blockSpec[connectToKey] || []).length;
+    }, 0);
+
+  const letters = generateLetterCodes(possibleConnectionsCount);
+  let letterCounter = 0;
+
+  const possibleConnections = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
+    if (block.get('id') === blockId) {
+      return memo;
+    }
+
+    const blockSpec = state.getIn(['blockSpecs', block.get('name')]);
+
+    const blockConnections = blockSpec[connectToKey].reduce((memo, key) => {
+      const code = letters[letterCounter++];
+
+      return {
+        ...memo,
+        [code]: {
+          blockId: block.get('id'),
+          code,
+          connector: key
+        }
+      };
+    }, {});
+
+    return {
+      ...memo,
+      ...blockConnections
+    };
+  }, {});
+
+  if (Object.keys(possibleConnections).length > 0) {
+    state = state.setIn(
+      ['ui', 'newConnection'],
+      fromJS({
+        typed: '',
+        from: { blockId, connector },
+        possibleConnections
+      })
+    );
+  }
+
+  return state;
+};
+
+const processConnectionStateLetter = (state, typedLetter, type) => {
+  state = state.updateIn(['ui', 'newConnection', 'typed'], typed => typed + typedLetter);
+
+  const letterCodes = state.getIn(['ui', 'newConnection', 'possibleConnections']);
+  const letterCodeLength = letterCodes.keySeq().first().length;
+
+  const typedLetters = state.getIn(['ui', 'newConnection', 'typed']);
+
+  const typedTooManyLetters = typedLetters.length > letterCodeLength;
+  const noMatchingCode = typedLetters.length === letterCodeLength && !letterCodes.has(typedLetters);
+
+  console.log({ typedTooManyLetters, noMatchingCode, letterCodes, letterCodeLength });
+
+  if (typedTooManyLetters || noMatchingCode) {
+    state = state.setIn(['ui', 'newConnection'], false);
+  } else if (letterCodes.has(typedLetters)) {
+    const matchingConnector = letterCodes.get(typedLetters);
+    const id = uuid();
+
+    state = state
+      .setIn(
+        ['graph', 'connections', id],
+        fromJS(
+          type === CONNECTION_TYPES.INPUT_TO_OUTPUT
+            ? {
+                id,
+                fromId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
+                fromInput: state.getIn(['ui', 'newConnection', 'from', 'connector']),
+                toId: matchingConnector.get('blockId'),
+                toOutput: matchingConnector.get('connector')
+              }
+            : {
+                id,
+                toId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
+                toOutput: state.getIn(['ui', 'newConnection', 'from', 'connector']),
+                fromId: matchingConnector.get('blockId'),
+                fromInput: matchingConnector.get('connector')
+              }
+        )
+      )
+      .setIn(['ui', 'newConnection'], false);
+  }
+
+  return state;
+};
+
 export default (state = initialState, action) => {
   const { type, payload } = action;
 
@@ -201,88 +306,19 @@ export default (state = initialState, action) => {
   }
 
   if (type === CONNECT_FROM_INPUT) {
-    const inputsCount = state
-      .getIn(['graph', 'blocks'])
-      .filter(block => block.get('id') !== payload.blockId)
-      .reduce((memo, block) => {
-        const { outputs } = state.getIn(['blockSpecs', block.get('name')]);
-        return memo + (outputs || []).length;
-      }, 0);
+    state = generateConnectionState(state, payload.blockId, payload.input, CONNECTION_TYPES.INPUT_TO_OUTPUT);
+  }
 
-    const letters = generateLetterCodes(inputsCount);
-    let letterCounter = 0;
-
-    const possibleConnections = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
-      if (block.get('id') === payload.blockId) {
-        return memo;
-      }
-
-      const { outputs } = state.getIn(['blockSpecs', block.get('name')]);
-
-      const blockConnections = outputs.reduce((memo, key) => {
-        const code = letters[letterCounter++];
-
-        return {
-          ...memo,
-          [code]: {
-            blockId: block.get('id'),
-            code,
-            output: key
-          }
-        };
-      }, {});
-
-      return {
-        ...memo,
-        ...blockConnections
-      };
-    }, {});
-
-    if (Object.keys(possibleConnections).length > 0) {
-      state = state.setIn(
-        ['ui', 'newConnection'],
-        fromJS({
-          typed: '',
-          from: {
-            blockId: payload.blockId,
-            input: payload.input
-          },
-          possibleConnections
-        })
-      );
-    }
+  if (type === CONNECT_FROM_OUTPUT) {
+    state = generateConnectionState(state, payload.blockId, payload.output, CONNECTION_TYPES.OUTPUT_TO_INPUT);
   }
 
   if (type === CONNECT_FROM_INPUT_TYPED_LETTER) {
-    state = state.updateIn(['ui', 'newConnection', 'typed'], typed => typed + payload.letter);
+    state = processConnectionStateLetter(state, payload.letter, CONNECTION_TYPES.INPUT_TO_OUTPUT);
+  }
 
-    const letterCodes = state.getIn(['ui', 'newConnection', 'possibleConnections']);
-    const letterCodeLength = letterCodes.first().length;
-
-    const typedLetters = state.getIn(['ui', 'newConnection', 'typed']);
-
-    const typedTooManyLetters = typedLetters.length > letterCodeLength
-    const noMatchingCode = typedLetters.length === letterCodeLength && !letterCodes.has(typedLetters);
-
-    if (typedTooManyLetters || noMatchingCode) {
-      state = state.setIn(['ui', 'newConnection'], false);
-    } else if (letterCodes.has(typedLetters)) {
-      const matchingOutput = letterCodes.get(typedLetters);
-      const id = uuid();
-
-      state = state
-        .setIn(
-          ['graph', 'connections', id],
-          fromJS({
-            id,
-            fromId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
-            fromInput: state.getIn(['ui', 'newConnection', 'from', 'input']),
-            toId: matchingOutput.get('blockId'),
-            toOutput: matchingOutput.get('output')
-          })
-        )
-        .setIn(['ui', 'newConnection'], false);
-    }
+  if (type === CONNECT_FROM_OUTPUT_TYPED_LETTER) {
+    state = processConnectionStateLetter(state, payload.letter, CONNECTION_TYPES.OUTPUT_TO_INPUT);
   }
 
   if (IS_DEBUG && state) {
