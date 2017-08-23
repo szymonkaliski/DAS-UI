@@ -261,15 +261,16 @@ export default (state = initialState, action) => {
 
     const typedLetters = state.getIn(['ui', 'newConnection', 'typed']);
 
-    if (typedLetters.length > letterCodeLength) {
-      return state.setIn(['ui', 'newConnection'], false);
-    } else if (typedLetters.length < letterCodeLength) {
-      return state;
-    } else {
+    const typedTooManyLetters = typedLetters.length > letterCodeLength
+    const noMatchingCode = typedLetters.length === letterCodeLength && !letterCodes.has(typedLetters);
+
+    if (typedTooManyLetters || noMatchingCode) {
+      state = state.setIn(['ui', 'newConnection'], false);
+    } else if (letterCodes.has(typedLetters)) {
       const matchingOutput = letterCodes.get(typedLetters);
       const id = uuid();
 
-      return state
+      state = state
         .setIn(
           ['graph', 'connections', id],
           fromJS({

@@ -11,6 +11,13 @@
   overflow: hidden; /* feels like a hack for transform() on main app wrapper */
 }
 
+.board,
+.connections {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 .board__grid-point {
   fill: rgba(255, 255, 255, 0.15);
 }
@@ -87,4 +94,9 @@
 
 .block__output--hovered {
   border: 1px solid red;
+}
+
+.connection {
+  stroke: red;
+  stroke-width: 3px;
 }

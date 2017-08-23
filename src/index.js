@@ -20,6 +20,7 @@ import {
 } from './actions';
 
 import Blocks from './components/blocks';
+import Connections from './components/connections';
 import Board from './components/board';
 import UpsertBlock from './components/upsert-block';
 import NewBlock from './components/new-block';
@@ -145,6 +146,7 @@ class App extends Component {
           {shouldRender && <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={cursor} />}
           {newBlockPrompt && <NewBlock x={x} y={y} />}
           <Blocks />
+          <Connections gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} />
         </div>
 
         {this.renderOverlays()}
