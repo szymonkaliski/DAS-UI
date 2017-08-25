@@ -22,7 +22,6 @@ class Graph {
     this.prevGraphState = fromJS({ blocks: {}, connections: {} });
 
     this.blocks = {};
-    this.connections = [];
 
     this.onStoreChange();
     this.store.subscribe(this.onStoreChange);
@@ -54,6 +53,7 @@ class Graph {
               blockName: diff.getIn(['value', 'name'])
             });
           } else if (pathType === 'connections') {
+            this.addConnection(diff.get('value').toJS());
           }
         }
       };
@@ -82,23 +82,20 @@ class Graph {
   addBlock({ id, blockName }) {
     const blockSpec = this.getBlockSpec(blockName);
 
-    console.log('addBlock', { id, blockName, blockSpec });
-
     const streams = streamsFromSpec(blockSpec);
 
     this.blocks[id] = blockSpec;
     this.blocks[id]._streams = streams;
     this.blocks[id].code({ ...streams });
-
-    console.log('blocks', this.blocks);
   }
 
-  addConnection({ id, from, to }) {
-    // TODO
-    // this.connections.push({ id, from, to });
-    // const fromOutput = this.blocks[from.id]._streams.outputs[from.output];
-    // const toInput = this.blocks[to.id]._streams.inputs[to.input];
-    // fromOutput.asObservable().subscribe(toInput);
+  addConnection({ id, fromId, fromOutput, toId, toInput }) {
+    const outputStream = this.blocks[fromId]._streams.outputs[fromOutput];
+    const inputStream = this.blocks[toId]._streams.inputs[toInput];
+
+    console.log({  id, fromId, fromOutput, toId, toInput, thisBlocks: this.blocks, inputStream, outputStream } )
+
+    outputStream.asObservable().subscribe(inputStream);
   }
 
   removeBlock() {

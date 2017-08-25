@@ -69,6 +69,31 @@ let initialState = fromJS({
   }
 });
 
+const TEMP_BLOCK_LOGGER = {
+  name: 'logger',
+  inputs: ['log'],
+  outputs: [],
+  code: ({ inputs }) => {
+    inputs.log.subscribe(text => console.log(text));
+  }
+};
+
+const TEMP_BLOCK_TICKER = {
+  name: 'ticker',
+  inputs: [],
+  outputs: ['tick'],
+  code: ({ outputs }) => {
+    var counter = 0;
+    setInterval(() => {
+      outputs.tick.onNext(counter++);
+    }, 1000);
+  }
+};
+
+initialState = initialState
+  .setIn(['blockSpecs', 'logger'], TEMP_BLOCK_LOGGER)
+  .setIn(['blockSpecs', 'ticker'], TEMP_BLOCK_TICKER);
+
 if (IS_DEBUG) {
   const parsed = parseState(localStorage.getItem('state'));
 
@@ -199,17 +224,17 @@ const processConnectionStateLetter = (state, typedLetter, type) => {
           type === CONNECTION_TYPES.INPUT_TO_OUTPUT
             ? {
                 id,
-                fromId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
-                fromInput: state.getIn(['ui', 'newConnection', 'from', 'connector']),
-                toId: matchingConnector.get('blockId'),
-                toOutput: matchingConnector.get('connector')
+                fromId: matchingConnector.get('blockId'),
+                fromOutput: matchingConnector.get('connector'),
+                toId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
+                toInput: state.getIn(['ui', 'newConnection', 'from', 'connector'])
               }
             : {
                 id,
-                toId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
-                toOutput: state.getIn(['ui', 'newConnection', 'from', 'connector']),
-                fromId: matchingConnector.get('blockId'),
-                fromInput: matchingConnector.get('connector')
+                fromId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
+                fromOutput: state.getIn(['ui', 'newConnection', 'from', 'connector']),
+                toId: matchingConnector.get('blockId'),
+                toInput: matchingConnector.get('connector')
               }
         )
       )

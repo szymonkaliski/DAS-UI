@@ -53,8 +53,9 @@ class NewBlock extends Component {
     const { value } = this.state;
     const { blockSpecs, x, y } = this.props;
 
+    // <div className="new-block" style={{ transform: `translate(${x}px, ${y}px)` }}>
     return (
-      <div className="new-block" style={{ transform: `translate(${x}px, ${y}px)` }}>
+      <div className="new-block">
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
           inputProps={{ onKeyDown: this.onKeyDown }}
@@ -63,7 +64,12 @@ class NewBlock extends Component {
           onChange={this.onChange}
           onSelect={this.onSelect}
           renderItem={(item, isHighlighted) => <NewBlockItem item={item} isHighlighted={isHighlighted} />}
+          renderMenu={(items, value, style) =>
+            <div className="new-block__menu" style={style}>
+              {items}
+            </div>}
           value={value}
+          open
         />
       </div>
     );

@@ -54,6 +54,14 @@
   width: 100%;
 }
 
+.new-block {
+  position: absolute;
+}
+
+.new-block__menu {
+  max-height: 100%;
+}
+
 .new-block__item {
   background: #EEE;
 }
