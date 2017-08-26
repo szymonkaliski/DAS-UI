@@ -14,7 +14,10 @@ import {
   CONNECT_FROM_INPUT,
   CONNECT_FROM_OUTPUT,
   CONNECT_FROM_INPUT_TYPED_LETTER,
-  CONNECT_FROM_OUTPUT_TYPED_LETTER
+  CONNECT_FROM_OUTPUT_TYPED_LETTER,
+  DELETE_BLOCK,
+  DELETE_CONNECTION_FROM_INPUT,
+  DELETE_CONNECTION_FROM_OUTPUT
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -344,6 +347,32 @@ export default (state = initialState, action) => {
 
   if (type === CONNECT_FROM_OUTPUT_TYPED_LETTER) {
     state = processConnectionStateLetter(state, payload.letter, CONNECTION_TYPES.OUTPUT_TO_INPUT);
+  }
+
+  if (type === DELETE_BLOCK) {
+    const { blockId } = payload;
+
+    state = state
+      .deleteIn(['graph', 'blocks', blockId])
+      .updateIn(['graph', 'connections'], connections =>
+        connections.filter(connection => connection.get('fromId') !== blockId && connection.get('toId') !== blockId)
+      );
+  }
+
+  if (type === DELETE_CONNECTION_FROM_INPUT) {
+    const { blockId, input } = payload;
+
+    state = state.updateIn(['graph', 'connections'], connections =>
+      connections.filter(connection => connection.get('toId') !== blockId && connection.get('toInput') !== input)
+    );
+  }
+
+  if (type === DELETE_CONNECTION_FROM_OUTPUT) {
+    const { blockId, output } = payload;
+
+    state = state.updateIn(['graph', 'connections'], connections =>
+      connections.filter(connection => connection.get('fromId') !== blockId && connection.get('toOutput') !== output)
+    );
   }
 
   if (IS_DEBUG && state) {

@@ -7,7 +7,10 @@ import {
   CONNECT_FROM_INPUT,
   CONNECT_FROM_OUTPUT,
   CONNECT_FROM_INPUT_TYPED_LETTER,
-  CONNECT_FROM_OUTPUT_TYPED_LETTER
+  CONNECT_FROM_OUTPUT_TYPED_LETTER,
+  DELETE_BLOCK,
+  DELETE_CONNECTION_FROM_INPUT,
+  DELETE_CONNECTION_FROM_OUTPUT
 } from '../constants';
 
 export const moveCursor = (x, y) => ({
@@ -51,4 +54,19 @@ export const connectFromInputTypedLetter = letter => ({
 export const connectFromOutputTypedLetter = letter => ({
   type: CONNECT_FROM_OUTPUT_TYPED_LETTER,
   payload: { letter }
+});
+
+export const deleteBlock = blockId => ({
+  type: DELETE_BLOCK,
+  payload: { blockId }
+});
+
+export const deleteConnectionFromInput = (blockId, input) => ({
+  type: DELETE_CONNECTION_FROM_INPUT,
+  payload: { blockId, input }
+});
+
+export const deleteConnectionFromOutput = (blockId, output) => ({
+  type: DELETE_CONNECTION_FROM_OUTPUT,
+  payload: { blockId, output }
 });

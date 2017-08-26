@@ -22,6 +22,7 @@ class Graph {
     this.prevGraphState = fromJS({ blocks: {}, connections: {} });
 
     this.blocks = {};
+    this.connections = {};
 
     this.onStoreChange();
     this.store.subscribe(this.onStoreChange);
@@ -54,6 +55,16 @@ class Graph {
             });
           } else if (pathType === 'connections') {
             this.addConnection(diff.get('value').toJS());
+          }
+        },
+
+        remove: diff => {
+          const pathType = diff.getIn(['path', 0]);
+
+          if (pathType === 'blocks') {
+            this.removeBlock({ id: diff.getIn(['path', 1]) });
+          } else if (pathType === 'connections') {
+            this.removeConnection({ id: diff.getIn(['path', 1]) });
           }
         }
       };
@@ -93,17 +104,17 @@ class Graph {
     const outputStream = this.blocks[fromId]._streams.outputs[fromOutput];
     const inputStream = this.blocks[toId]._streams.inputs[toInput];
 
-    console.log({  id, fromId, fromOutput, toId, toInput, thisBlocks: this.blocks, inputStream, outputStream } )
-
-    outputStream.asObservable().subscribe(inputStream);
+    this.connections[id] = outputStream.subscribe(inputStream);
   }
 
-  removeBlock() {
-    // TODO
+  removeBlock({ id }) {
+    delete this.blocks[id];
   }
 
-  removeConnection() {
-    // TODO
+  removeConnection({ id }) {
+    this.connections[id].dispose();
+
+    delete this.connections[id];
   }
 }
 

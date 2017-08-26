@@ -16,7 +16,10 @@ import {
   connectFromOutput,
   connectFromInput,
   connectFromInputTypedLetter,
-  connectFromOutputTypedLetter
+  connectFromOutputTypedLetter,
+  deleteBlock,
+  deleteConnectionFromInput,
+  deleteConnectionFromOutput
 } from './actions';
 
 import Blocks from './components/blocks';
@@ -64,8 +67,6 @@ class App extends Component {
   makeConnections() {
     const { hovered } = this.props;
 
-    console.log('hovered');
-
     if (!hovered) {
       return;
     }
@@ -74,6 +75,22 @@ class App extends Component {
       this.props.connectFromInput(hovered.blockId, hovered.input);
     } else if (hovered.type === 'output') {
       this.props.connectFromOutput(hovered.blockId, hovered.output);
+    }
+  }
+
+  deleteHovered() {
+    const { hovered } = this.props;
+
+    if (!hovered) {
+      return;
+    }
+
+    if (hovered.type === 'block') {
+      this.props.deleteBlock(hovered.blockId);
+    } else if (hovered.type === 'input') {
+      this.props.deleteConnectionFromInput(hovered.blockId, hovered.input);
+    } else if (hovered.type === 'output') {
+      this.props.deleteConnectionFromOutput(hovered.blockId, hovered.output);
     }
   }
 
@@ -103,7 +120,8 @@ class App extends Component {
       k: () => this.props.moveCursor(0, -1),
       l: () => this.props.moveCursor(1, 0),
       n: () => this.props.showNewBlockPrompt(),
-      c: () => this.makeConnections()
+      c: () => this.makeConnections(),
+      d: () => this.deleteHovered()
     };
 
     if (keyFns[key]) {
@@ -177,7 +195,10 @@ const AppConnected = connect(mapStateToProps, {
   connectFromOutput,
   connectFromInput,
   connectFromInputTypedLetter,
-  connectFromOutputTypedLetter
+  connectFromOutputTypedLetter,
+  deleteBlock,
+  deleteConnectionFromInput,
+  deleteConnectionFromOutput
 })(AppMeasured);
 
 ReactDOM.render(
