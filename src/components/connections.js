@@ -37,14 +37,12 @@ const mapStateToProps = state => {
 
         const fromPosition = {
           x: fromBlock.getIn(['position', 'x']),
-          y:
-            fromBlock.getIn(['position', 'y']) -
-            (fromSpec.inputs.length - fromSpec.inputs.indexOf(connection.get('fromInput')) - 1)
+          y: fromBlock.getIn(['position', 'y']) + fromSpec.outputs.indexOf(connection.get('fromOutput')) + 2
         };
 
         const toPosition = {
           x: toBlock.getIn(['position', 'x']),
-          y: toBlock.getIn(['position', 'y']) + (toSpec.outputs.indexOf(connection.get('toOutput')) + 1)
+          y: toBlock.getIn(['position', 'y']) - toSpec.inputs.length + toSpec.inputs.indexOf(connection.get('toInput'))
         };
 
         return { id: connection.get('id'), fromPosition, toPosition };
