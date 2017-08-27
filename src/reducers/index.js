@@ -223,35 +223,42 @@ const processConnectionStateLetter = (state, typedLetter, type) => {
   const typedTooManyLetters = typedLetters.length > letterCodeLength;
   const noMatchingCode = typedLetters.length === letterCodeLength && !letterCodes.has(typedLetters);
 
-  console.log({ typedTooManyLetters, noMatchingCode, letterCodes, letterCodeLength });
-
   if (typedTooManyLetters || noMatchingCode) {
     state = state.setIn(['ui', 'newConnection'], false);
   } else if (letterCodes.has(typedLetters)) {
     const matchingConnector = letterCodes.get(typedLetters);
     const id = uuid();
 
+    const toId =
+      type === CONNECTION_TYPES.INPUT_TO_OUTPUT
+        ? state.getIn(['ui', 'newConnection', 'from', 'blockId'])
+        : matchingConnector.get('blockId');
+
+    const toInput =
+      type === CONNECTION_TYPES.INPUT_TO_OUTPUT
+        ? state.getIn(['ui', 'newConnection', 'from', 'connector'])
+        : matchingConnector.get('connector');
+
+    const fromId =
+      type === CONNECTION_TYPES.INPUT_TO_OUTPUT
+        ? matchingConnector.get('blockId')
+        : state.getIn(['ui', 'newConnection', 'from', 'blockId']);
+
+    const fromOutput =
+      type === CONNECTION_TYPES.INPUT_TO_OUTPUT
+        ? matchingConnector.get('connector')
+        : state.getIn(['ui', 'newConnection', 'from', 'connector']);
+
+    const previousConnectionToInput = state
+      .getIn(['graph', 'connections'])
+      .find(connection => connection.get('toId') === toId && connection.get('toInput') === toInput);
+
+    if (previousConnectionToInput) {
+      state = state.deleteIn(['graph', 'connections', previousConnectionToInput.get('id')]);
+    }
+
     state = state
-      .setIn(
-        ['graph', 'connections', id],
-        fromJS(
-          type === CONNECTION_TYPES.INPUT_TO_OUTPUT
-            ? {
-                id,
-                fromId: matchingConnector.get('blockId'),
-                fromOutput: matchingConnector.get('connector'),
-                toId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
-                toInput: state.getIn(['ui', 'newConnection', 'from', 'connector'])
-              }
-            : {
-                id,
-                fromId: state.getIn(['ui', 'newConnection', 'from', 'blockId']),
-                fromOutput: state.getIn(['ui', 'newConnection', 'from', 'connector']),
-                toId: matchingConnector.get('blockId'),
-                toInput: matchingConnector.get('connector')
-              }
-        )
-      )
+      .setIn(['graph', 'connections', id], fromJS({ id, fromId, fromOutput, toId, toInput }))
       .setIn(['ui', 'newConnection'], false);
   }
 
