@@ -35,7 +35,16 @@ const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter }) =
   );
 };
 
-const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInput, isConnectingFromOutput }) => {
+const Block = ({
+  block,
+  spec,
+  cursor,
+  hovered,
+  letterHovers,
+  isFindingBlock,
+  isConnectingFromInput,
+  isConnectingFromOutput
+}) => {
   const outputLetterHovers =
     isConnectingFromInput &&
     letterHovers
@@ -86,6 +95,7 @@ const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInp
             connectingLetter={get(outputLetterHovers, output)}
           />
         )}
+      {isFindingBlock ? `${isFindingBlock[block.id]} : ` : ''}
       {block.name}
     </div>
   );
@@ -97,6 +107,7 @@ const Blocks = ({
   cursor,
   hovered,
   letterHovers,
+  isFindingBlock,
   isConnectingFromInput,
   isConnectingFromOutput
 }) => {
@@ -110,6 +121,7 @@ const Blocks = ({
           spec={blockSpecs[block.name]}
           hovered={hovered.blockId === block.id && hovered}
           letterHovers={letterHovers}
+          isFindingBlock={isFindingBlock}
           isConnectingFromInput={isConnectingFromInput}
           isConnectingFromOutput={isConnectingFromOutput}
         />
@@ -122,14 +134,15 @@ const mapStateToProps = state => {
   const hovered = state.getIn(['ui', 'hovered']);
   const isConnecting = !!state.getIn(['ui', 'newConnection']);
   const letterHovers = isConnecting && state.getIn(['ui', 'newConnection', 'possibleConnections']).valueSeq().toJS();
+  const isFindingBlock = state.getIn(['ui', 'findingBlock']);
 
   return {
     blockSpecs: state.get('blockSpecs').toJS(),
     blocks: state.getIn(['graph', 'blocks']).valueSeq().toJS(),
     cursor: state.getIn(['ui', 'cursor']).toJS(),
-
     hovered: hovered ? hovered.toJS() : false,
     letterHovers,
+    isFindingBlock: isFindingBlock ? isFindingBlock.get('blockLetters').flip().toJS() : false,
     isConnectingFromInput: isConnecting && hovered.get('input'),
     isConnectingFromOutput: isConnecting && hovered.get('output')
   };

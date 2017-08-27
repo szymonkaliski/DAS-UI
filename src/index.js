@@ -21,7 +21,9 @@ import {
   connectFromOutputTypedLetter,
   deleteBlock,
   deleteConnectionFromInput,
-  deleteConnectionFromOutput
+  deleteConnectionFromOutput,
+  findBlock,
+  findBlockTypedLetter
 } from './actions';
 
 import Blocks from './components/blocks';
@@ -45,10 +47,7 @@ if (IS_DEBUG) {
   };
 
   window.dumpGraph = () => {
-    console.log({
-      blocks: graph.blocks,
-      connections: graph.connections
-    });
+    console.log({ blocks: graph.blocks, connections: graph.connections });
   };
 }
 
@@ -98,7 +97,7 @@ class App extends Component {
 
   onKeydown(e) {
     const { key, target } = e;
-    const { isConnectingFromInput, isConnectingFromOutput } = this.props;
+    const { isConnectingFromInput, isConnectingFromOutput, isFindingBlock } = this.props;
 
     if (target.localName !== 'body') {
       return;
@@ -113,6 +112,12 @@ class App extends Component {
     // TODO: if not-letter then cancel
     if (isConnectingFromOutput) {
       this.props.connectFromOutputTypedLetter(key);
+      return;
+    }
+
+    // TODO: if not-letter then cancel
+    if (isFindingBlock) {
+      this.props.findBlockTypedLetter(key);
       return;
     }
 
@@ -135,7 +140,8 @@ class App extends Component {
 
       n: () => this.props.showNewBlockPrompt(),
       c: () => this.makeConnections(),
-      d: () => this.deleteHovered()
+      d: () => this.deleteHovered(),
+      f: () => this.props.findBlock()
     };
 
     if (keyFns[key]) {
@@ -196,6 +202,7 @@ const mapStateToProps = state => {
     hovered: hovered ? hovered.toJS() : null,
     isConnectingFromInput: isConnecting && hovered.get('input'),
     isConnectingFromOutput: isConnecting && hovered.get('output'),
+    isFindingBlock: state.getIn(['ui', 'findingBlock']),
     newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
     upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay'])
   };
@@ -214,7 +221,9 @@ const AppConnected = connect(mapStateToProps, {
   connectFromOutputTypedLetter,
   deleteBlock,
   deleteConnectionFromInput,
-  deleteConnectionFromOutput
+  deleteConnectionFromOutput,
+  findBlock,
+  findBlockTypedLetter
 })(AppMeasured);
 
 ReactDOM.render(

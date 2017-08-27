@@ -22,7 +22,9 @@ import {
   CONNECT_FROM_OUTPUT_TYPED_LETTER,
   DELETE_BLOCK,
   DELETE_CONNECTION_FROM_INPUT,
-  DELETE_CONNECTION_FROM_OUTPUT
+  DELETE_CONNECTION_FROM_OUTPUT,
+  FIND_BLOCK,
+  FIND_BLOCK_TYPED_LETTER
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -73,7 +75,8 @@ let initialState = fromJS({
     hovered: false,
     upsertBlockOverlay: false,
     newBlockPrompt: false,
-    newConnection: false
+    newConnection: false,
+    findingBlock: false
   }
 });
 
@@ -132,10 +135,7 @@ const createBlockOnBoard = (state, block) => {
         id,
         name: block,
         position: state.getIn(['ui', 'cursor']).toJS(),
-        size: {
-          width: DEFAULT_BLOCK_WIDTH,
-          height: blockSpec.ui ? 5 : 1
-        }
+        size: { width: DEFAULT_BLOCK_WIDTH, height: blockSpec.ui ? 5 : 1 }
       })
     )
     .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: id }));
@@ -201,11 +201,7 @@ const generateConnectionState = (state, blockId, connector, type) => {
   if (Object.keys(possibleConnections).length > 0) {
     state = state.setIn(
       ['ui', 'newConnection'],
-      fromJS({
-        typed: '',
-        from: { blockId, connector },
-        possibleConnections
-      })
+      fromJS({ typed: '', from: { blockId, connector }, possibleConnections })
     );
   }
 
@@ -268,7 +264,7 @@ const processConnectionStateLetter = (state, typedLetter, type) => {
 export default (state = initialState, action) => {
   const { type, payload } = action;
 
-  console.info(`action: ${type}`, payload);
+  console.info(`action: ${type}`, payload || {});
 
   if (type === MOVE_CURSOR) {
     state = state.updateIn(['ui', 'cursor'], cursor =>
@@ -424,6 +420,45 @@ export default (state = initialState, action) => {
     state = state.updateIn(['graph', 'connections'], connections =>
       connections.filter(connection => connection.get('fromId') !== blockId && connection.get('toOutput') !== output)
     );
+  }
+
+  if (type === FIND_BLOCK) {
+    const blockCount = state.getIn(['graph', 'blocks']).count();
+
+    const blockLetters = generateLetterCodes(blockCount).reduce((memo, letter, i) => {
+      return {
+        ...memo,
+        [letter]: state.getIn(['graph', 'blocks']).valueSeq().getIn([i, 'id'])
+      };
+    }, {});
+
+    if (blockCount > 0) {
+      state = state.setIn(['ui', 'findingBlock'], fromJS({ typed: '', blockLetters }));
+    }
+  }
+
+  if (type === FIND_BLOCK_TYPED_LETTER) {
+    const { letter } = payload;
+
+    state = state.updateIn(['ui', 'findingBlock', 'typed'], typed => typed + letter);
+
+    const typedLetters = state.getIn(['ui', 'findingBlock', 'typed']);
+    const letterCodes = state.getIn(['ui', 'findingBlock', 'blockLetters']);
+    const letterCodeLength = letterCodes.keySeq().first().length;
+
+    const typedTooManyLetters = typedLetters.length > letterCodeLength;
+    const noMatchingCode = typedLetters.length === letterCodeLength && !letterCodes.has(typedLetters);
+
+    if (typedTooManyLetters || noMatchingCode) {
+      state = state.setIn(['ui', 'findingBlock'], false);
+    } else if (letterCodes.has(typedLetters)) {
+      const matchingBlockId = letterCodes.get(typedLetters);
+
+      state = state
+        .setIn(['ui', 'cursor'], state.getIn(['graph', 'blocks', matchingBlockId, 'position']))
+        .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: matchingBlockId }))
+        .setIn(['ui', 'findingBlock'], false);
+    }
   }
 
   if (IS_DEBUG && state) {

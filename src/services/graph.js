@@ -42,8 +42,6 @@ class Graph {
     if (!graphState.equals(this.prevGraphState)) {
       const diff = makeDiff(this.prevGraphState, graphState);
 
-      console.log('graphState changed', graphState, diff);
-
       const ops = {
         add: diff => {
           const pathType = diff.getIn(['path', 0]);
