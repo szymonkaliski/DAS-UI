@@ -122,7 +122,7 @@ const mapStateToProps = state => {
   return {
     blockSpecs: state.get('blockSpecs').toJS(),
     blocks: state.getIn(['graph', 'blocks']).valueSeq().toJS(),
-    cursor: state.get('cursor').toJS(),
+    cursor: state.getIn(['ui', 'cursor']).toJS(),
 
     hovered: hovered ? hovered.toJS() : false,
     letterHovers,

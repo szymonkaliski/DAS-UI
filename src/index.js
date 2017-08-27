@@ -12,6 +12,7 @@ import { IS_DEBUG, GRID_SIZE } from './constants';
 
 import {
   moveCursor,
+  moveBlock,
   showNewBlockPrompt,
   connectFromOutput,
   connectFromInput,
@@ -119,6 +120,12 @@ class App extends Component {
       j: () => this.props.moveCursor(0, 1),
       k: () => this.props.moveCursor(0, -1),
       l: () => this.props.moveCursor(1, 0),
+
+      H: () => this.props.moveBlock(-1, 0),
+      J: () => this.props.moveBlock(0, 1),
+      K: () => this.props.moveBlock(0, -1),
+      L: () => this.props.moveBlock(1, 0),
+
       n: () => this.props.showNewBlockPrompt(),
       c: () => this.makeConnections(),
       d: () => this.deleteHovered()
@@ -178,7 +185,7 @@ const mapStateToProps = state => {
   const isConnecting = !!state.getIn(['ui', 'newConnection']);
 
   return {
-    cursor: state.get('cursor').toJS(),
+    cursor: state.getIn(['ui', 'cursor' ]).toJS(),
     hovered: hovered ? hovered.toJS() : null,
     isConnectingFromInput: isConnecting && hovered.get('input'),
     isConnectingFromOutput: isConnecting && hovered.get('output'),
@@ -191,6 +198,7 @@ const AppMeasured = withContentRect('bounds')(App);
 
 const AppConnected = connect(mapStateToProps, {
   moveCursor,
+  moveBlock,
   showNewBlockPrompt,
   connectFromOutput,
   connectFromInput,

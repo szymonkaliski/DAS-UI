@@ -6,6 +6,7 @@ import leftPad from 'left-pad';
 import {
   IS_DEBUG,
   MOVE_CURSOR,
+  MOVE_BLOCK,
   CREATE_BLOCK,
   UPSERT_BLOCK,
   NEW_BLOCK_NAME,
@@ -55,16 +56,16 @@ const parseState = str => {
 };
 
 let initialState = fromJS({
-  cursor: {
-    x: 0,
-    y: 0
-  },
   blockSpecs: {},
   graph: {
     blocks: {},
     connections: {}
   },
   ui: {
+    cursor: {
+      x: 0,
+      y: 0
+    },
     hovered: false,
     upsertBlockOverlay: false,
     newBlockPrompt: false,
@@ -119,15 +120,16 @@ if (IS_DEBUG) {
 const createBlockOnBoard = (state, block) => {
   const id = uuid();
 
-  return state.setIn(
-    ['graph', 'blocks', id],
-    fromJS({
-      id,
-      name: block,
-      position: state.get('cursor').toJS(),
-      hovered: { type: 'block' }
-    })
-  );
+  return state
+    .setIn(
+      ['graph', 'blocks', id],
+      fromJS({
+        id,
+        name: block,
+        position: state.getIn(['ui', 'cursor']).toJS()
+      })
+    )
+    .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: id }));
 };
 
 const ALPHABET_LETTERS = 26;
@@ -253,7 +255,9 @@ export default (state = initialState, action) => {
   console.info(`action: ${type}`, payload);
 
   if (type === MOVE_CURSOR) {
-    state = state.update('cursor', cursor => cursor.update('x', x => x + payload.x).update('y', y => y + payload.y));
+    state = state.updateIn(['ui', 'cursor'], cursor =>
+      cursor.update('x', x => x + payload.x).update('y', y => y + payload.y)
+    );
 
     // TODO: make this work on whole width of the block, not just most-left part
     const hovered = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
@@ -262,21 +266,21 @@ export default (state = initialState, action) => {
         return memo;
       }
 
-      const xAxisMatches = block.getIn(['position', 'x']) === state.getIn(['cursor', 'x']);
+      const xAxisMatches = block.getIn(['position', 'x']) === state.getIn(['ui', 'cursor', 'x']);
 
       if (!xAxisMatches) {
         return memo;
       }
 
       const blockSpec = state.getIn(['blockSpecs', block.get('name')]);
-      const blockHovered = block.get('position').equals(state.get('cursor'));
+      const blockHovered = block.get('position').equals(state.getIn(['ui', 'cursor']));
 
       if (blockHovered) {
         return { type: 'block', blockId: block.get('id') };
       }
 
       const inputHoveredIdx = blockSpec.inputs.slice().reverse().findIndex((_, index) => {
-        return xAxisMatches && state.getIn(['cursor', 'y']) === block.getIn(['position', 'y']) - (index + 1);
+        return xAxisMatches && state.getIn(['ui', 'cursor', 'y']) === block.getIn(['position', 'y']) - (index + 1);
       });
       const inputHovered = inputHoveredIdx >= 0 ? blockSpec.inputs.slice().reverse()[inputHoveredIdx] : false;
 
@@ -285,7 +289,7 @@ export default (state = initialState, action) => {
       }
 
       const outputHoveredIdx = blockSpec.outputs.findIndex((_, index) => {
-        return xAxisMatches && state.getIn(['cursor', 'y']) === block.getIn(['position', 'y']) + (index + 1);
+        return xAxisMatches && state.getIn(['ui', 'cursor', 'y']) === block.getIn(['position', 'y']) + (index + 1);
       });
       const outputHovered = outputHoveredIdx >= 0 ? blockSpec.outputs[outputHoveredIdx] : false;
 
@@ -297,6 +301,18 @@ export default (state = initialState, action) => {
     }, undefined);
 
     state = state.setIn(['ui', 'hovered'], fromJS(hovered));
+  }
+
+  if (type === MOVE_BLOCK) {
+    const hovered = state.getIn(['ui', 'hovered']);
+
+    if (hovered.get('type') === 'block') {
+      state = state.updateIn(['ui', 'cursor'], cursor =>
+        cursor.update('x', x => x + payload.x).update('y', y => y + payload.y)
+      );
+
+      state = state.setIn(['graph', 'blocks', hovered.get('blockId'), 'position'], state.getIn(['ui', 'cursor']));
+    }
   }
 
   if (type === UPSERT_BLOCK) {

@@ -1,5 +1,6 @@
 import {
   MOVE_CURSOR,
+  MOVE_BLOCK,
   CREATE_BLOCK,
   UPSERT_BLOCK,
   SHOW_NEW_BLOCK_PROMPT,
@@ -15,6 +16,11 @@ import {
 
 export const moveCursor = (x, y) => ({
   type: MOVE_CURSOR,
+  payload: { x, y }
+});
+
+export const moveBlock = (x, y) => ({
+  type: MOVE_BLOCK,
   payload: { x, y }
 });
 
