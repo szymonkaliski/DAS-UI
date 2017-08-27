@@ -14,7 +14,8 @@ import {
   DELETE_CONNECTION_FROM_INPUT,
   DELETE_CONNECTION_FROM_OUTPUT,
   FIND_BLOCK,
-  FIND_BLOCK_TYPED_LETTER
+  FIND_BLOCK_TYPED_LETTER,
+  SET_BLOCK_STATE
 } from '../constants';
 
 export const moveCursor = (x, y) => ({
@@ -93,3 +94,8 @@ export const findBlockTypedLetter = letter => ({
   type: FIND_BLOCK_TYPED_LETTER,
   payload: { letter }
 });
+
+export const setBlockState = (blockId, patch) => ({
+  type: SET_BLOCK_STATE,
+  payload: { blockId, patch }
+})

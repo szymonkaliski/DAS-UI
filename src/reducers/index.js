@@ -24,7 +24,8 @@ import {
   DELETE_CONNECTION_FROM_INPUT,
   DELETE_CONNECTION_FROM_OUTPUT,
   FIND_BLOCK,
-  FIND_BLOCK_TYPED_LETTER
+  FIND_BLOCK_TYPED_LETTER,
+  SET_BLOCK_STATE
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -93,11 +94,17 @@ const TEMP_BLOCK_TICKER = {
   name: 'ticker',
   inputs: [],
   outputs: ['tick'],
-  code: ({ outputs }) => {
+  code: ({ outputs, setState }) => {
     var counter = 0;
+
     setInterval(() => {
-      outputs.tick.onNext(counter++);
+      outputs.tick.onNext(counter);
+      setState({ counter });
+      counter++;
     }, 1000);
+  },
+  ui: ({ counter }) => {
+    return 'tick: ' + counter;
   }
 };
 
@@ -134,6 +141,7 @@ const createBlockOnBoard = (state, block) => {
       fromJS({
         id,
         name: block,
+        state: {},
         position: state.getIn(['ui', 'cursor']).toJS(),
         size: { width: DEFAULT_BLOCK_WIDTH, height: blockSpec.ui ? 5 : 1 }
       })
@@ -459,6 +467,13 @@ export default (state = initialState, action) => {
         .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: matchingBlockId }))
         .setIn(['ui', 'findingBlock'], false);
     }
+  }
+
+  if (type === SET_BLOCK_STATE) {
+    state = state.updateIn(['graph', 'blocks', payload.blockId, 'state'], blockState => ({
+      ...blockState,
+      ...payload.patch
+    }));
   }
 
   if (IS_DEBUG && state) {

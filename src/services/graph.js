@@ -3,6 +3,8 @@ import { Subject } from 'rx';
 import autobind from 'react-autobind';
 import makeDiff from 'immutable-diff';
 
+import { setBlockState } from '../actions';
+
 const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
   const makeStreams = xs => xs.reduce((memo, key) => Object.assign(memo, { [key]: new Subject() }), {});
 
@@ -95,7 +97,12 @@ class Graph {
 
     this.blocks[id] = blockSpec;
     this.blocks[id]._streams = streams;
-    this.blocks[id].code({ ...streams });
+
+    // TODO: state as stream! otherwise ui->code is not possible!
+    this.blocks[id].code({
+      ...streams,
+      setState: patch => this.store.dispatch(setBlockState(id, patch))
+    });
   }
 
   addConnection({ id, fromId, fromOutput, toId, toInput }) {

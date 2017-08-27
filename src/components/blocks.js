@@ -4,6 +4,7 @@ import get from 'lodash.get';
 import { connect } from 'react-redux';
 
 import { GRID_SIZE } from '../constants';
+import { setBlockState } from '../actions';
 
 const Input = ({ i, name, width, isHovered, connectingLetter }) => {
   return (
@@ -97,6 +98,13 @@ const Block = ({
         )}
       {isFindingBlock ? `${isFindingBlock[block.id]} : ` : ''}
       {block.name}
+      {spec.ui &&
+        <div>
+          {spec.ui({
+            ...block.state,
+            setState: patch => this.props.setBlockState(patch)
+          })}
+        </div>}
     </div>
   );
 };
@@ -124,6 +132,7 @@ const Blocks = ({
           isFindingBlock={isFindingBlock}
           isConnectingFromInput={isConnectingFromInput}
           isConnectingFromOutput={isConnectingFromOutput}
+          setBlockState={patch => setBlockState(block.id, patch)}
         />
       )}
     </div>
@@ -148,4 +157,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(Blocks);
+export default connect(mapStateToProps, { setBlockState })(Blocks);
