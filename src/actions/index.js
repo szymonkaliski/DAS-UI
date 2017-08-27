@@ -1,6 +1,7 @@
 import {
   MOVE_CURSOR,
   MOVE_BLOCK,
+  RESIZE_BLOCK,
   CREATE_BLOCK,
   UPSERT_BLOCK,
   SHOW_NEW_BLOCK_PROMPT,
@@ -22,6 +23,11 @@ export const moveCursor = (x, y) => ({
 export const moveBlock = (x, y) => ({
   type: MOVE_BLOCK,
   payload: { x, y }
+});
+
+export const resizeBlock = (w, h) => ({
+  type: RESIZE_BLOCK,
+  payload: { w, h }
 });
 
 export const createBlock = block => ({

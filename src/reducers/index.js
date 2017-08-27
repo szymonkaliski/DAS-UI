@@ -6,8 +6,11 @@ import leftPad from 'left-pad';
 import {
   IS_DEBUG,
   DEFAULT_BLOCK_WIDTH,
+  MIN_BLOCK_WIDTH,
+  MIN_BLOCK_HEIGHT,
   MOVE_CURSOR,
   MOVE_BLOCK,
+  RESIZE_BLOCK,
   CREATE_BLOCK,
   UPSERT_BLOCK,
   NEW_BLOCK_NAME,
@@ -318,13 +321,25 @@ export default (state = initialState, action) => {
     const hovered = state.getIn(['ui', 'hovered']);
 
     if (hovered) {
-      state = state.updateIn(['ui', 'cursor'], cursor =>
-        cursor.update('x', x => x + payload.x).update('y', y => y + payload.y)
-      );
+      state = state
+        .updateIn(['ui', 'cursor'], cursor => cursor.update('x', x => x + payload.x).update('y', y => y + payload.y))
+        .updateIn(['graph', 'blocks', hovered.get('blockId'), 'position'], position =>
+          position.update('x', x => x + payload.x).update('y', y => y + payload.y)
+        );
+    }
+  }
 
-      state = state.updateIn(['graph', 'blocks', hovered.get('blockId'), 'position'], position =>
-        position.update('x', x => x + payload.x).update('y', y => y + payload.y)
-      );
+  if (type === RESIZE_BLOCK) {
+    const hovered = state.getIn(['ui', 'hovered']);
+
+    if (hovered) {
+      state = state
+        .updateIn(['graph', 'blocks', hovered.get('blockId'), 'size'], size =>
+          size
+            .update('width', width => Math.max(MIN_BLOCK_WIDTH, width + payload.w))
+            .update('height', height => Math.max(MIN_BLOCK_HEIGHT, height + payload.h))
+        )
+        .updateIn(['ui', 'cursor'], cursor => cursor.update('x', x => x + payload.w).update('y', y => y + payload.h));
     }
   }
 

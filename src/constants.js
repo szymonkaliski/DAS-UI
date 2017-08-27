@@ -2,11 +2,14 @@ export const IS_DEBUG = window.location.search.indexOf('debug') >= 0;
 
 export const GRID_SIZE = 20;
 export const DEFAULT_BLOCK_WIDTH = 5;
+export const MIN_BLOCK_WIDTH = 3;
+export const MIN_BLOCK_HEIGHT = 1;
 
 export const NEW_BLOCK_NAME = '__NEW_BLOCK__';
 
 export const MOVE_CURSOR = 'MOVE_CURSOR';
 export const MOVE_BLOCK = 'MOVE_BLOCK';
+export const RESIZE_BLOCK = 'RESIZE_BLOCK';
 export const UPSERT_BLOCK = 'UPSERT_BLOCK';
 export const CREATE_BLOCK = 'CREATE_BLOCK';
 export const SHOW_NEW_BLOCK_PROMPT = 'SHOW_NEW_BLOCK_PROMPT';
