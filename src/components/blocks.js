@@ -5,12 +5,13 @@ import { connect } from 'react-redux';
 
 import { GRID_SIZE } from '../constants';
 
-const Input = ({ i, name, isHovered, connectingLetter }) => {
+const Input = ({ i, name, width, isHovered, connectingLetter }) => {
   return (
     <div
       className={classnames('block__input', { 'block__input--hovered': isHovered })}
       style={{
-        top: (i + 1) * GRID_SIZE * -1
+        top: (i + 1) * GRID_SIZE * -1,
+        width: width * GRID_SIZE
       }}
     >
       {connectingLetter ? `[${connectingLetter}] ` : ''}
@@ -19,12 +20,13 @@ const Input = ({ i, name, isHovered, connectingLetter }) => {
   );
 };
 
-const Output = ({ i, name, isHovered, connectingLetter }) => {
+const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter }) => {
   return (
     <div
       className={classnames('block__output', { 'block__output--hovered': isHovered })}
       style={{
-        top: (i + 1) * GRID_SIZE
+        top: (i + heightOffset) * GRID_SIZE,
+        width: width * GRID_SIZE
       }}
     >
       {connectingLetter ? `[${connectingLetter}] ` : ''}
@@ -34,8 +36,6 @@ const Output = ({ i, name, isHovered, connectingLetter }) => {
 };
 
 const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInput, isConnectingFromOutput }) => {
-  const blockWidth = 5; // TODO: block width should be measured if it has custom UI? how?
-
   const outputLetterHovers =
     isConnectingFromInput &&
     letterHovers
@@ -56,7 +56,8 @@ const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInp
       style={{
         top: block.position.y * GRID_SIZE,
         left: block.position.x * GRID_SIZE,
-        width: blockWidth * GRID_SIZE
+        width: block.size.width * GRID_SIZE,
+        height: block.size.height * GRID_SIZE
       }}
     >
       {spec.inputs
@@ -67,6 +68,7 @@ const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInp
             i={i}
             key={input}
             name={input}
+            width={block.size.width}
             isHovered={get(hovered, 'type') === 'input' && get(hovered, 'input') === input}
             connectingLetter={get(inputLetterHovers, input)}
           />
@@ -78,6 +80,8 @@ const Block = ({ block, spec, cursor, hovered, letterHovers, isConnectingFromInp
             i={i}
             key={output}
             name={output}
+            width={block.size.width}
+            heightOffset={block.size.height}
             isHovered={get(hovered, 'type') === 'output' && get(hovered, 'output') === output}
             connectingLetter={get(outputLetterHovers, output)}
           />

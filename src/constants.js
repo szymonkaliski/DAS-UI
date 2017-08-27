@@ -1,6 +1,7 @@
 export const IS_DEBUG = window.location.search.indexOf('debug') >= 0;
 
 export const GRID_SIZE = 20;
+export const DEFAULT_BLOCK_WIDTH = 5;
 
 export const NEW_BLOCK_NAME = '__NEW_BLOCK__';
 

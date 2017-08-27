@@ -5,6 +5,7 @@ import leftPad from 'left-pad';
 
 import {
   IS_DEBUG,
+  DEFAULT_BLOCK_WIDTH,
   MOVE_CURSOR,
   MOVE_BLOCK,
   CREATE_BLOCK,
@@ -119,6 +120,7 @@ if (IS_DEBUG) {
 
 const createBlockOnBoard = (state, block) => {
   const id = uuid();
+  const blockSpec = state.getIn(['blockSpecs', block]);
 
   return state
     .setIn(
@@ -126,7 +128,11 @@ const createBlockOnBoard = (state, block) => {
       fromJS({
         id,
         name: block,
-        position: state.getIn(['ui', 'cursor']).toJS()
+        position: state.getIn(['ui', 'cursor']).toJS(),
+        size: {
+          width: DEFAULT_BLOCK_WIDTH,
+          height: blockSpec.ui ? 5 : 1
+        }
       })
     )
     .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: id }));
@@ -259,28 +265,33 @@ export default (state = initialState, action) => {
       cursor.update('x', x => x + payload.x).update('y', y => y + payload.y)
     );
 
-    // TODO: make this work on whole width of the block, not just most-left part
     const hovered = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
       // first match wins
       if (memo) {
         return memo;
       }
 
-      const xAxisMatches = block.getIn(['position', 'x']) === state.getIn(['ui', 'cursor', 'x']);
+      const cursor = state.getIn(['ui', 'cursor']);
+      const position = block.get('position');
+      const size = block.get('size');
+
+      const xAxisMatches =
+        position.get('x') <= cursor.get('x') && cursor.get('x') < position.get('x') + size.get('width');
 
       if (!xAxisMatches) {
         return memo;
       }
 
       const blockSpec = state.getIn(['blockSpecs', block.get('name')]);
-      const blockHovered = block.get('position').equals(state.getIn(['ui', 'cursor']));
+      const blockHovered =
+        position.get('y') <= cursor.get('y') && cursor.get('y') < position.get('y') + size.get('height');
 
       if (blockHovered) {
         return { type: 'block', blockId: block.get('id') };
       }
 
       const inputHoveredIdx = blockSpec.inputs.slice().reverse().findIndex((_, index) => {
-        return xAxisMatches && state.getIn(['ui', 'cursor', 'y']) === block.getIn(['position', 'y']) - (index + 1);
+        return xAxisMatches && cursor.get('y') === position.get('y') - (index + 1);
       });
       const inputHovered = inputHoveredIdx >= 0 ? blockSpec.inputs.slice().reverse()[inputHoveredIdx] : false;
 
@@ -289,7 +300,7 @@ export default (state = initialState, action) => {
       }
 
       const outputHoveredIdx = blockSpec.outputs.findIndex((_, index) => {
-        return xAxisMatches && state.getIn(['ui', 'cursor', 'y']) === block.getIn(['position', 'y']) + (index + 1);
+        return xAxisMatches && cursor.get('y') === position.get('y') + size.get('height') + index;
       });
       const outputHovered = outputHoveredIdx >= 0 ? blockSpec.outputs[outputHoveredIdx] : false;
 
@@ -306,12 +317,14 @@ export default (state = initialState, action) => {
   if (type === MOVE_BLOCK) {
     const hovered = state.getIn(['ui', 'hovered']);
 
-    if (hovered.get('type') === 'block') {
+    if (hovered) {
       state = state.updateIn(['ui', 'cursor'], cursor =>
         cursor.update('x', x => x + payload.x).update('y', y => y + payload.y)
       );
 
-      state = state.setIn(['graph', 'blocks', hovered.get('blockId'), 'position'], state.getIn(['ui', 'cursor']));
+      state = state.updateIn(['graph', 'blocks', hovered.get('blockId'), 'position'], position =>
+        position.update('x', x => x + payload.x).update('y', y => y + payload.y)
+      );
     }
   }
 

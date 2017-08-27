@@ -12,7 +12,7 @@ const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
   };
 };
 
-const IGNORED_PATH_KEYS = ['position'];
+const IGNORED_PATH_KEYS = ['position', 'size'];
 
 class Graph {
   constructor(store) {
