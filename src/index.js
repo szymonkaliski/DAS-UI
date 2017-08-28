@@ -183,8 +183,8 @@ class App extends Component {
         <div style={{ transform: `translate(${gridMarginWidth}px, ${gridMarginHeight}px)` }}>
           {shouldRender && <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={cursor} />}
           {newBlockPrompt && <NewBlock x={x} y={y} />}
-          <Blocks />
           <Connections gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} />
+          <Blocks />
         </div>
 
         {this.renderOverlays()}

@@ -10,7 +10,8 @@ const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
 
   return {
     inputs: makeStreams(inputs),
-    outputs: makeStreams(outputs)
+    outputs: makeStreams(outputs),
+    state: new Subject()
   };
 };
 
@@ -44,6 +45,8 @@ class Graph {
     if (!graphState.equals(this.prevGraphState)) {
       const diff = makeDiff(this.prevGraphState, graphState);
 
+      console.info('diff', diff);
+
       const ops = {
         add: diff => {
           const pathType = diff.getIn(['path', 0]);
@@ -65,6 +68,13 @@ class Graph {
             this.removeBlock({ id: diff.getIn(['path', 1]) });
           } else if (pathType === 'connections') {
             this.removeConnection({ id: diff.getIn(['path', 1]) });
+          }
+        },
+
+        replace: diff => {
+          if (diff.getIn(['path', 2]) === 'state') {
+            const blockId = diff.getIn(['path', 1]);
+            this.updateBlockState({ id: blockId, state: graphState.getIn(['blocks', blockId, 'state']) });
           }
         }
       };
@@ -91,14 +101,18 @@ class Graph {
   }
 
   addBlock({ id, blockName }) {
+    if (this.blocks[id]) {
+      console.warn(`tried creating already existing block with: ${id} ${blockName}`);
+      return;
+    }
+
     const blockSpec = this.getBlockSpec(blockName);
 
     const streams = streamsFromSpec(blockSpec);
 
     this.blocks[id] = blockSpec;
-    this.blocks[id]._streams = streams;
+    this.blocks[id].streams = streams;
 
-    // TODO: state as stream! otherwise ui->code is not possible!
     this.blocks[id].code({
       ...streams,
       setState: patch => this.store.dispatch(setBlockState(id, patch))
@@ -106,8 +120,8 @@ class Graph {
   }
 
   addConnection({ id, fromId, fromOutput, toId, toInput }) {
-    const outputStream = this.blocks[fromId]._streams.outputs[fromOutput];
-    const inputStream = this.blocks[toId]._streams.inputs[toInput];
+    const outputStream = this.blocks[fromId].streams.outputs[fromOutput];
+    const inputStream = this.blocks[toId].streams.inputs[toInput];
 
     this.connections[id] = outputStream.subscribe(inputStream);
   }
@@ -120,6 +134,10 @@ class Graph {
     this.connections[id].dispose();
 
     delete this.connections[id];
+  }
+
+  updateBlockState({ id, state }) {
+    this.blocks[id].streams.state.onNext(state);
   }
 }
 

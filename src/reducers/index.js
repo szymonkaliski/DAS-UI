@@ -81,11 +81,27 @@ let initialState = fromJS({
   }
 });
 
+const TEMP_BLOCK_BUTTON = {
+  name: 'button',
+  inputs: [],
+  outputs: ['click'],
+  code: ({ outputs, state }) => {
+    state.subscribe(click => {
+      outputs.click.onNext(click);
+    })
+  },
+  ui: ({ setState }) => {
+    return window.DOM.button({
+      onClick: () => setState({ click: new Date() })
+    }, 'clickme')
+  }
+};
+
 const TEMP_BLOCK_LOGGER = {
   name: 'logger',
   inputs: ['log'],
   outputs: [],
-  code: ({ inputs }) => {
+  code: ({ inputs, state, setState }) => {
     inputs.log.subscribe(text => console.log(text));
   }
 };
@@ -94,7 +110,7 @@ const TEMP_BLOCK_TICKER = {
   name: 'ticker',
   inputs: [],
   outputs: ['tick'],
-  code: ({ outputs, setState }) => {
+  code: ({ outputs, state, setState }) => {
     var counter = 0;
 
     setInterval(() => {
@@ -102,6 +118,10 @@ const TEMP_BLOCK_TICKER = {
       setState({ counter });
       counter++;
     }, 1000);
+
+    // state.subscribe(val => {
+    //   console.log('ticker state updated', val);
+    // })
   },
   ui: ({ counter }) => {
     return 'tick: ' + counter;
@@ -110,6 +130,7 @@ const TEMP_BLOCK_TICKER = {
 
 initialState = initialState
   .setIn(['blockSpecs', 'logger'], TEMP_BLOCK_LOGGER)
+  .setIn(['blockSpecs', 'button'], TEMP_BLOCK_BUTTON)
   .setIn(['blockSpecs', 'ticker'], TEMP_BLOCK_TICKER);
 
 if (IS_DEBUG) {
@@ -141,11 +162,11 @@ const createBlockOnBoard = (state, block) => {
       fromJS({
         id,
         name: block,
-        state: {},
         position: state.getIn(['ui', 'cursor']).toJS(),
         size: { width: DEFAULT_BLOCK_WIDTH, height: blockSpec.ui ? 5 : 1 }
       })
     )
+    .setIn(['graph', 'blocks', id, 'state'], {}) // state is plain object!
     .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: id }));
 };
 
@@ -470,10 +491,13 @@ export default (state = initialState, action) => {
   }
 
   if (type === SET_BLOCK_STATE) {
-    state = state.updateIn(['graph', 'blocks', payload.blockId, 'state'], blockState => ({
-      ...blockState,
+    const currentState = state.getIn(['graph', 'blocks', payload.blockId, 'state']);
+
+    // mergeIn wasn't working here, I want state to be plain object inside of immutable map...
+    state = state.setIn(['graph', 'blocks', payload.blockId, 'state'], {
+      ...(currentState || {}),
       ...payload.patch
-    }));
+    });
   }
 
   if (IS_DEBUG && state) {

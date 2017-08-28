@@ -27,7 +27,6 @@
 //     visitFunction: function(node) {
 //       // console.log(node);
 
-//       // TODO: check if it's an object, otherwise no params!
 //       params = node.value.params[0].properties.map(property('key.name'));
 //       name = node.value.id.name;
 

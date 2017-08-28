@@ -42,6 +42,7 @@ const Block = ({
   cursor,
   hovered,
   letterHovers,
+  setBlockState,
   isFindingBlock,
   isConnectingFromInput,
   isConnectingFromOutput
@@ -102,7 +103,7 @@ const Block = ({
         <div>
           {spec.ui({
             ...block.state,
-            setState: patch => this.props.setBlockState(patch)
+            setState: patch => setBlockState(patch)
           })}
         </div>}
     </div>
@@ -115,6 +116,7 @@ const Blocks = ({
   cursor,
   hovered,
   letterHovers,
+  setBlockState,
   isFindingBlock,
   isConnectingFromInput,
   isConnectingFromOutput
