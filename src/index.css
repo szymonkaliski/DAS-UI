@@ -1,13 +1,37 @@
+/* colors: http://chriskempson.com/projects/base16/ */
+
+/* base00 : #181818; */
+/* base01 : #282828; */
+/* base02 : #383838; */
+/* base03 : #585858; */
+/* base04 : #b8b8b8; */
+/* base05 : #d8d8d8; */
+/* base06 : #e8e8e8; */
+/* base07 : #f8f8f8; */
+/* base08 : #ab4642; */
+/* base09 : #dc9656; */
+/* base0A : #f7ca88; */
+/* base0B : #a1b56c; */
+/* base0C : #86c1b9; */
+/* base0D : #7cafc2; */
+/* base0E : #ba8baf; */
+/* base0F : #a16946; */
+
 * {
   padding: 0;
   margin: 0;
+}
+
+body {
+  font-family: 'Inconsolata', monospace;
+  font-size: 11px;
 }
 
 .app {
   width: 100vw;
   height: 100vh;
 
-  background: #222;
+  background: #181818;
   overflow: hidden; /* feels like a hack for transform() on main app wrapper */
 }
 
@@ -19,7 +43,7 @@
 }
 
 .board__grid-point {
-  fill: rgba(255, 255, 255, 0.15);
+  fill: rgba(255, 255, 255, 0.1);
 }
 
 @keyframes pulsate {
@@ -29,7 +53,7 @@
 }
 
 .board__cursor {
-  animation: pulsate 1.0s infinite;
+  animation: pulsate 0.8s infinite;
 }
 
 .overlay {
@@ -58,16 +82,39 @@
   position: absolute;
 }
 
+.new-block__input {
+  background: #282828;
+  border: 1px solid #f8f8f8;
+  color: #f8f8f8;
+  padding: 4px;
+  font-size: 10px;
+}
+
+.new-block__input {
+  width: 100%;
+}
+
+.new-block__input:focus {
+  outline: none;
+}
+
 .new-block__menu {
-  max-height: 100%;
+  display: inline-block;
+  min-width: 100% !important;
+
+  max-height: 300px;
+  overflow-y: scroll;
 }
 
-.new-block__item {
-  background: #EEE;
+.new-block__menu-item {
+  color: #282828;
+  background: #f8f8f8;
+  padding: 4px;
+  font-size: 11px;
 }
 
-.new-block__item--selected {
-  background: #DDD;
+.new-block__menu-item--selected {
+  background: #d8d8d8;
 }
 
 .block__wrapper {
@@ -84,6 +131,9 @@
   position: absolute;
   background: darksalmon;
   border: 1px solid #eee;
+
+  font-family: 'Inconsolata', monospace;
+  font-size: 11px;
 }
 
 .block__output {
@@ -98,6 +148,10 @@
 
 .block__output--hovered {
   border: 1px solid red;
+}
+
+.connections {
+  pointer-events: none;
 }
 
 .connection {

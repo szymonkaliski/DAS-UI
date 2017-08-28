@@ -4,8 +4,10 @@ import autobind from 'react-autobind';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
 
-import { NEW_BLOCK_NAME } from '../constants';
+import { NEW_BLOCK_NAME, GRID_SIZE } from '../constants';
 import { createBlock, closeNewBlockPrompt } from '../actions';
+
+const PADDING = 4;
 
 // has to be a class - required by react-autocomplete
 class NewBlockItem extends Component {
@@ -13,7 +15,7 @@ class NewBlockItem extends Component {
     const { item, isHighlighted } = this.props;
 
     return (
-      <div className={classnames('new-block__item', isHighlighted && 'new-block__item--selected')}>
+      <div className={classnames('new-block__menu-item', isHighlighted && 'new-block__menu-item--selected')}>
         {item.name}
       </div>
     );
@@ -53,14 +55,33 @@ class NewBlock extends Component {
     const { value } = this.state;
     const { blockSpecs, x, y } = this.props;
 
-    // <div className="new-block" style={{ transform: `translate(${x}px, ${y}px)` }}>
+    const menuItems = blockSpecs.filter(
+      ({ name }) => (value.length >= 0 ? name.toLowerCase().indexOf(value.toLowerCase()) >= 0 : true)
+    );
+
     return (
-      <div className="new-block">
+      <div
+        className="new-block"
+        style={{
+          transform: `translate(${x}px, ${y}px)`,
+          height: GRID_SIZE,
+          width: 8 * GRID_SIZE
+        }}
+      >
         <Autocomplete
           ref={ref => (this.autocompleteRef = ref)}
-          inputProps={{ onKeyDown: this.onKeyDown }}
+          inputProps={{
+            onKeyDown: this.onKeyDown,
+            className: 'new-block__input',
+            style: {
+              height: GRID_SIZE - PADDING * 2,
+              width: 8 * GRID_SIZE - PADDING * 2
+            }
+          }}
           getItemValue={block => block.id}
-          items={[{ name: 'New Block...', id: NEW_BLOCK_NAME }].concat(blockSpecs)}
+          items={[{ name: `create new${value.length > 0 ? `: ${value}` : '...'}`, id: NEW_BLOCK_NAME }].concat(
+            menuItems
+          )}
           onChange={this.onChange}
           onSelect={this.onSelect}
           renderItem={(item, isHighlighted) => <NewBlockItem item={item} isHighlighted={isHighlighted} />}

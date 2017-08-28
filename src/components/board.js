@@ -23,8 +23,6 @@ const BoardCursor = ({ position }) => {
       className="board__cursor"
       x={position.x * GRID_SIZE}
       y={position.y * GRID_SIZE}
-      rx={6}
-      ry={6}
       width={GRID_SIZE}
       height={GRID_SIZE}
     />
