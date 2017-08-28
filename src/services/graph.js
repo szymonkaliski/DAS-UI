@@ -113,6 +113,11 @@ class Graph {
     this.blocks[id] = blockSpec;
     this.blocks[id].streams = streams;
 
+    if (!this.blocks[id].code) {
+      console.warn(`tried to run .code() on non-existing block: ${id} ${blockName}`);
+      return;
+    }
+
     this.blocks[id].code({
       ...streams,
       setState: patch => this.store.dispatch(setBlockState(id, patch))

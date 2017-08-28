@@ -13,6 +13,7 @@ import {
   RESIZE_BLOCK,
   CREATE_BLOCK,
   UPSERT_BLOCK,
+  CANCEL_UPSERT_BLOCK,
   NEW_BLOCK_NAME,
   SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
@@ -88,12 +89,15 @@ const TEMP_BLOCK_BUTTON = {
   code: ({ outputs, state }) => {
     state.subscribe(click => {
       outputs.click.onNext(click);
-    })
+    });
   },
   ui: ({ setState }) => {
-    return window.DOM.button({
-      onClick: () => setState({ click: new Date() })
-    }, 'clickme')
+    return window.DOM.button(
+      {
+        onClick: () => setState({ click: new Date() })
+      },
+      'clickme'
+    );
   }
 };
 
@@ -387,6 +391,10 @@ export default (state = initialState, action) => {
     }
   }
 
+  if (type === CANCEL_UPSERT_BLOCK) {
+    state = state.setIn(['ui', 'upsertBlockOverlay'], false);
+  }
+
   if (type === CREATE_BLOCK) {
     const { block } = payload;
 
@@ -435,6 +443,7 @@ export default (state = initialState, action) => {
       );
   }
 
+  // TODO: if block has multiple inputs, deletes wrong things
   if (type === DELETE_CONNECTION_FROM_INPUT) {
     const { blockId, input } = payload;
 
@@ -443,6 +452,7 @@ export default (state = initialState, action) => {
     );
   }
 
+  // TODO: if block has multiple outputs, deletes wrong things
   if (type === DELETE_CONNECTION_FROM_OUTPUT) {
     const { blockId, output } = payload;
 

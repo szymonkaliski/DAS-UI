@@ -75,7 +75,9 @@ body {
 }
 
 .upsert-block {
-  width: 100%;
+  width: 60%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .new-block {
@@ -87,7 +89,9 @@ body {
   border: 1px solid #f8f8f8;
   color: #f8f8f8;
   padding: 4px;
-  font-size: 10px;
+
+  font-family: 'Inconsolata', monospace;
+  font-size: 11px;
 }
 
 .new-block__input {
@@ -117,37 +121,53 @@ body {
   background: #d8d8d8;
 }
 
-.block__wrapper {
-  position: absolute;
-  background: white;
-  border: 1px solid #eee;
-}
-
-.block__wrapper--hovered {
-  border: 1px solid red;
-}
-
-.block__input {
-  position: absolute;
-  background: darksalmon;
-  border: 1px solid #eee;
-
+#create_block_ace {
   font-family: 'Inconsolata', monospace;
   font-size: 11px;
 }
 
+.block__wrapper {
+  position: absolute;
+  background: #d8d8d8;
+  color: #181818;
+}
+
+.block__content {
+  border: 2px solid #d8d8d8;
+  padding: 4px;
+}
+
+.block__content--hovered {
+  border: 2px solid #ab4642;
+}
+
+.block__input {
+  position: absolute;
+  background: #7cafc2;
+  border: 2px solid #7cafc2;
+}
+
+.block__input-content {
+  padding: 4px;
+}
+
 .block__output {
   position: absolute;
-  background: steelblue;
-  border: 1px solid #eee;
+  background: #a1b56c;
+  border: 2px solid #a1b56c;
+}
+
+.block__output-content {
+  padding: 4px;
+  text-align: right;
 }
 
 .block__input--hovered {
-  border: 1px solid red;
+  border: 2px solid #ab4642;
 }
 
 .block__output--hovered {
-  border: 1px solid red;
+  border: 2px solid #ab4642;
 }
 
 .connections {
@@ -155,6 +175,7 @@ body {
 }
 
 .connection {
-  stroke: red;
-  stroke-width: 3px;
+  stroke: #f8f8f8;
+  stroke-width: 1px;
+  fill: none;
 }

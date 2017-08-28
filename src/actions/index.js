@@ -4,6 +4,7 @@ import {
   RESIZE_BLOCK,
   CREATE_BLOCK,
   UPSERT_BLOCK,
+  CANCEL_UPSERT_BLOCK,
   SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
   CONNECT_FROM_INPUT,
@@ -41,6 +42,10 @@ export const createBlock = block => ({
 export const upsertBlock = block => ({
   type: UPSERT_BLOCK,
   payload: { block }
+});
+
+export const cancelUpsertBlock = ()=> ({
+  type: CANCEL_UPSERT_BLOCK
 });
 
 export const showNewBlockPrompt = () => ({

@@ -6,17 +6,23 @@ import { connect } from 'react-redux';
 import { GRID_SIZE } from '../constants';
 import { setBlockState } from '../actions';
 
+const BORDER = 2;
+const PADDING = 4;
+
 const Input = ({ i, name, width, isHovered, connectingLetter }) => {
   return (
     <div
       className={classnames('block__input', { 'block__input--hovered': isHovered })}
       style={{
         top: (i + 1) * GRID_SIZE * -1,
-        width: width * GRID_SIZE
+        width: width * GRID_SIZE - BORDER * 2,
+        height: GRID_SIZE - BORDER * 2
       }}
     >
-      {connectingLetter ? `[${connectingLetter}] ` : ''}
-      {name}
+      <div className="block__input-content">
+        {connectingLetter ? `[${connectingLetter}] ` : ''}
+        {name}
+      </div>
     </div>
   );
 };
@@ -27,11 +33,14 @@ const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter }) =
       className={classnames('block__output', { 'block__output--hovered': isHovered })}
       style={{
         top: (i + heightOffset) * GRID_SIZE,
-        width: width * GRID_SIZE
+        width: width * GRID_SIZE - BORDER * 2,
+        height: GRID_SIZE - BORDER * 2
       }}
     >
-      {connectingLetter ? `[${connectingLetter}] ` : ''}
-      {name}
+      <div className="block__output-content">
+        {connectingLetter ? `[${connectingLetter}] ` : ''}
+        {name}
+      </div>
     </div>
   );
 };
@@ -61,14 +70,10 @@ const Block = ({
 
   return (
     <div
-      className={classnames('block__wrapper', {
-        'block__wrapper--hovered': get(hovered, 'type') === 'block'
-      })}
+      className="block__wrapper"
       style={{
         top: block.position.y * GRID_SIZE,
-        left: block.position.x * GRID_SIZE,
-        width: block.size.width * GRID_SIZE,
-        height: block.size.height * GRID_SIZE
+        left: block.position.x * GRID_SIZE
       }}
     >
       {spec.inputs
@@ -97,15 +102,26 @@ const Block = ({
             connectingLetter={get(outputLetterHovers, output)}
           />
         )}
-      {isFindingBlock ? `${isFindingBlock[block.id]} : ` : ''}
-      {block.name}
-      {spec.ui &&
-        <div>
-          {spec.ui({
-            ...block.state,
-            setState: patch => setBlockState(patch)
-          })}
-        </div>}
+
+      <div
+        className={classnames('block__content', {
+          'block__content--hovered': get(hovered, 'type') === 'block'
+        })}
+        style={{
+          width: block.size.width * GRID_SIZE - (BORDER + PADDING) * 2,
+          height: block.size.height * GRID_SIZE - (BORDER + PADDING) * 2
+        }}
+      >
+        {isFindingBlock ? `${isFindingBlock[block.id]} : ` : ''}
+        {block.name}
+        {spec.ui &&
+          <div>
+            {spec.ui({
+              ...block.state,
+              setState: patch => setBlockState(patch)
+            })}
+          </div>}
+      </div>
     </div>
   );
 };

@@ -9,16 +9,15 @@ const Connections = ({ connections, gridWidthCount, gridHeightCount }) => {
   return (
     <svg width={gridWidthCount * GRID_SIZE} height={gridHeightCount * GRID_SIZE} className="connections">
       {connections.map(({ id, fromPosition, toPosition }) => {
-        return (
-          <line
-            className="connection"
-            key={id}
-            x1={fromPosition.x * GRID_SIZE}
-            y1={fromPosition.y * GRID_SIZE - GRID_SIZE / 2}
-            x2={toPosition.x * GRID_SIZE}
-            y2={toPosition.y * GRID_SIZE + GRID_SIZE / 2}
-          />
-        );
+        const x1 = fromPosition.x * GRID_SIZE;
+        const y1 = fromPosition.y * GRID_SIZE - GRID_SIZE / 2;
+        const x2 = toPosition.x * GRID_SIZE;
+        const y2 = toPosition.y * GRID_SIZE + GRID_SIZE / 2;
+        const mod = Math.max(50, Math.abs(x2 - x1) / 2 + 50);
+
+        const path = `M ${x1},${y1} C ${x1 + mod},${y1} ${x2 - mod},${y2} ${x2},${y2}`;
+
+        return <path className="connection" key={id} d={path} />;
       })}
     </svg>
   );
