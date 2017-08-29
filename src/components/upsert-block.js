@@ -69,7 +69,6 @@ class UpsertBlock extends Component {
       <div className="upsert-block">
         <Ace
           editorProps={{ $blockScrolling: true }}
-          fontSize={11}
           height="100%"
           keyboardHandler="vim"
           mode="javascript"

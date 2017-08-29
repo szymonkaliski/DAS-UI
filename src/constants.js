@@ -1,6 +1,6 @@
 export const IS_DEBUG = window.location.search.indexOf('debug') >= 0;
 
-export const GRID_SIZE = 20;
+export const GRID_SIZE = 24;
 export const DEFAULT_BLOCK_WIDTH = 5;
 export const MIN_BLOCK_WIDTH = 3;
 export const MIN_BLOCK_HEIGHT = 1;

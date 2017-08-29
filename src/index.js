@@ -137,6 +137,7 @@ class App extends Component {
       '+': () => this.props.resizeBlock(0, 1),
       '=': () => this.props.resizeBlock(0, 1),
       '-': () => this.props.resizeBlock(0, -1),
+      _: () => this.props.resizeBlock(0, -1),
 
       n: () => this.props.showNewBlockPrompt(),
       c: () => this.makeConnections(),
@@ -154,10 +155,11 @@ class App extends Component {
 
     return (
       <div>
-        {upsertBlockOverlay &&
+        {upsertBlockOverlay && (
           <Overlay>
             <UpsertBlock block={upsertBlockOverlay} />
-          </Overlay>}
+          </Overlay>
+        )}
       </div>
     );
   }
@@ -182,9 +184,9 @@ class App extends Component {
       <div className="app" ref={measureRef}>
         <div style={{ transform: `translate(${gridMarginWidth}px, ${gridMarginHeight}px)` }}>
           {shouldRender && <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={cursor} />}
+          {shouldRender && <Blocks />}
+          {shouldRender && <Connections gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} />}
           {newBlockPrompt && <NewBlock x={x} y={y} />}
-          <Connections gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} />
-          <Blocks />
         </div>
 
         {this.renderOverlays()}

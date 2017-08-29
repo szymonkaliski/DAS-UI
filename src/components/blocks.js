@@ -6,10 +6,32 @@ import { connect } from 'react-redux';
 import { GRID_SIZE } from '../constants';
 import { setBlockState } from '../actions';
 
-const BORDER = 2;
-const PADDING = 4;
+const BORDER = 1;
+const PADDING = 5;
 
-const Input = ({ i, name, width, isHovered, connectingLetter }) => {
+const HighlightFoundLetters = ({ string, typed }) => {
+  const regex = new RegExp(`^${typed}`);
+  const splited = string.split(regex);
+
+  if (typed.length === 0 || splited.length === 1) {
+    return <span>{string}</span>;
+  }
+
+  return (
+    <span>
+      <span className="highlight-letters">{typed}</span>
+      {splited[1]}
+    </span>
+  );
+};
+
+const Circle = ({ width = 8, height = 8 }) => (
+  <svg className="connector-circle__container" width={width} height={height}>
+    <circle className="connector-circle" cx={width / 2} cy={height / 2} r={Math.min(width, height) / 2} />
+  </svg>
+);
+
+const Input = ({ i, name, width, isHovered, connectingLetter, typedLetters }) => {
   return (
     <div
       className={classnames('block__input', { 'block__input--hovered': isHovered })}
@@ -20,14 +42,20 @@ const Input = ({ i, name, width, isHovered, connectingLetter }) => {
       }}
     >
       <div className="block__input-content">
-        {connectingLetter ? `[${connectingLetter}] ` : ''}
-        {name}
+        <Circle />
+        <span className="block__input-name">{name}</span>
+
+        {connectingLetter && (
+          <div className="block__input-letter-hover">
+            <HighlightFoundLetters string={connectingLetter} typed={typedLetters} />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter }) => {
+const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter, typedLetters }) => {
   return (
     <div
       className={classnames('block__output', { 'block__output--hovered': isHovered })}
@@ -38,8 +66,14 @@ const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter }) =
       }}
     >
       <div className="block__output-content">
-        {connectingLetter ? `[${connectingLetter}] ` : ''}
-        {name}
+        <span className="block__output-name">{name}</span>
+        <Circle />
+
+        {connectingLetter && (
+          <div className="block__output-letter-hover">
+            <HighlightFoundLetters string={connectingLetter} typed={typedLetters} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -53,6 +87,7 @@ const Block = ({
   letterHovers,
   setBlockState,
   isFindingBlock,
+  typedLetters,
   isConnectingFromInput,
   isConnectingFromOutput
 }) => {
@@ -79,19 +114,20 @@ const Block = ({
       {spec.inputs
         .slice()
         .reverse()
-        .map((input, i) =>
+        .map((input, i) => (
           <Input
             i={i}
             key={input}
             name={input}
             width={block.size.width}
             isHovered={get(hovered, 'type') === 'input' && get(hovered, 'input') === input}
+            typedLetters={typedLetters}
             connectingLetter={get(inputLetterHovers, input)}
           />
-        )}
+        ))}
 
       {(spec.outputs || [])
-        .map((output, i) =>
+        .map((output, i) => (
           <Output
             i={i}
             key={output}
@@ -99,9 +135,10 @@ const Block = ({
             width={block.size.width}
             heightOffset={block.size.height}
             isHovered={get(hovered, 'type') === 'output' && get(hovered, 'output') === output}
+            typedLetters={typedLetters}
             connectingLetter={get(outputLetterHovers, output)}
           />
-        )}
+        ))}
 
       <div
         className={classnames('block__content', {
@@ -112,15 +149,20 @@ const Block = ({
           height: block.size.height * GRID_SIZE - (BORDER + PADDING) * 2
         }}
       >
-        {isFindingBlock ? `${isFindingBlock[block.id]} : ` : ''}
+        {isFindingBlock && (
+          <div className="block__find">
+            <HighlightFoundLetters string={isFindingBlock[block.id]} typed={typedLetters} />
+          </div>
+        )}
         {block.name}
-        {spec.ui &&
+        {spec.ui && (
           <div>
             {spec.ui({
               ...block.state,
               setState: patch => setBlockState(patch)
             })}
-          </div>}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -134,12 +176,13 @@ const Blocks = ({
   letterHovers,
   setBlockState,
   isFindingBlock,
+  typedLetters,
   isConnectingFromInput,
   isConnectingFromOutput
 }) => {
   return (
     <div>
-      {blocks.map(block =>
+      {blocks.map(block => (
         <Block
           key={block.id}
           block={block}
@@ -148,11 +191,12 @@ const Blocks = ({
           hovered={hovered.blockId === block.id && hovered}
           letterHovers={letterHovers}
           isFindingBlock={isFindingBlock}
+          typedLetters={typedLetters}
           isConnectingFromInput={isConnectingFromInput}
           isConnectingFromOutput={isConnectingFromOutput}
           setBlockState={patch => setBlockState(block.id, patch)}
         />
-      )}
+      ))}
     </div>
   );
 };
@@ -160,16 +204,32 @@ const Blocks = ({
 const mapStateToProps = state => {
   const hovered = state.getIn(['ui', 'hovered']);
   const isConnecting = !!state.getIn(['ui', 'newConnection']);
-  const letterHovers = isConnecting && state.getIn(['ui', 'newConnection', 'possibleConnections']).valueSeq().toJS();
+  const letterHovers =
+    isConnecting &&
+    state
+      .getIn(['ui', 'newConnection', 'possibleConnections'])
+      .valueSeq()
+      .toJS();
   const isFindingBlock = state.getIn(['ui', 'findingBlock']);
 
   return {
     blockSpecs: state.get('blockSpecs').toJS(),
-    blocks: state.getIn(['graph', 'blocks']).valueSeq().toJS(),
+    blocks: state
+      .getIn(['graph', 'blocks'])
+      .valueSeq()
+      .toJS(),
     cursor: state.getIn(['ui', 'cursor']).toJS(),
     hovered: hovered ? hovered.toJS() : false,
+    typedLetters: isFindingBlock
+      ? isFindingBlock.get('typed')
+      : isConnecting ? state.getIn(['ui', 'newConnection', 'typed']) : '',
     letterHovers,
-    isFindingBlock: isFindingBlock ? isFindingBlock.get('blockLetters').flip().toJS() : false,
+    isFindingBlock: isFindingBlock
+      ? isFindingBlock
+          .get('blockLetters')
+          .flip()
+          .toJS()
+      : false,
     isConnectingFromInput: isConnecting && hovered.get('input'),
     isConnectingFromOutput: isConnecting && hovered.get('output')
   };

@@ -84,11 +84,14 @@ class NewBlock extends Component {
           )}
           onChange={this.onChange}
           onSelect={this.onSelect}
-          renderItem={(item, isHighlighted) => <NewBlockItem item={item} isHighlighted={isHighlighted} />}
-          renderMenu={(items, value, style) =>
+          renderItem={(item, isHighlighted) => (
+            <NewBlockItem key={item.name} item={item} isHighlighted={isHighlighted} />
+          )}
+          renderMenu={(items, value, style) => (
             <div className="new-block__menu" style={style}>
               {items}
-            </div>}
+            </div>
+          )}
           value={value}
           open
         />
@@ -99,7 +102,11 @@ class NewBlock extends Component {
 
 const mapStateToProps = state => {
   return {
-    blockSpecs: state.get('blockSpecs').valueSeq().toJS().map(block => ({ ...block, id: block.name }))
+    blockSpecs: state
+      .get('blockSpecs')
+      .valueSeq()
+      .toJS()
+      .map(block => ({ ...block, id: block.name }))
   };
 };
 

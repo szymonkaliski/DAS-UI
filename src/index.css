@@ -24,7 +24,7 @@
 
 body {
   font-family: 'Inconsolata', monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .app {
@@ -88,10 +88,10 @@ body {
   background: #282828;
   border: 1px solid #f8f8f8;
   color: #f8f8f8;
-  padding: 4px;
+  padding: 5px;
 
   font-family: 'Inconsolata', monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .new-block__input {
@@ -113,8 +113,8 @@ body {
 .new-block__menu-item {
   color: #282828;
   background: #f8f8f8;
-  padding: 4px;
-  font-size: 11px;
+  padding: 5px;
+  font-size: 12px;
 }
 
 .new-block__menu-item--selected {
@@ -123,7 +123,7 @@ body {
 
 #create_block_ace {
   font-family: 'Inconsolata', monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .block__wrapper {
@@ -133,41 +133,70 @@ body {
 }
 
 .block__content {
-  border: 2px solid #d8d8d8;
-  padding: 4px;
+  border: 1px solid #d8d8d8;
+  padding: 5px;
 }
 
 .block__content--hovered {
-  border: 2px solid #ab4642;
+  border: 1px solid #ab4642;
 }
 
-.block__input {
-  position: absolute;
-  background: #7cafc2;
-  border: 2px solid #7cafc2;
-}
-
-.block__input-content {
-  padding: 4px;
-}
-
+.block__input,
 .block__output {
   position: absolute;
-  background: #a1b56c;
-  border: 2px solid #a1b56c;
+  background: #282828;
+  border: 1px solid #d8d8d8;
+  color: #d8d8d8;
+}
+
+.block__input-content,
+.block__output-content {
+  display: flex;
+  padding: 5px;
 }
 
 .block__output-content {
-  padding: 4px;
+  justify-content: flex-end;
+}
+
+.block__output-content {
   text-align: right;
 }
 
-.block__input--hovered {
-  border: 2px solid #ab4642;
+.block__input--hovered,
+.block__output--hovered {
+  border: 1px solid #ab4642;
 }
 
-.block__output--hovered {
-  border: 2px solid #ab4642;
+.block__input-name {
+  padding-left: 4px;
+}
+
+.block__output-name {
+  padding-right: 4px;
+}
+
+.block__find,
+.block__output-letter-hover,
+.block__input-letter-hover {
+  position: absolute;
+  right: -27px;
+  top: 1px;
+  background: #d8d8d8;
+  color: #181818;
+  padding: 4px;
+  width: 18px;
+  height: 12px;
+  text-align: center;
+}
+
+.block__find,
+.block__input-letter-hover {
+  left: -27px;
+}
+
+.block__find {
+  top: 0;
 }
 
 .connections {
@@ -175,7 +204,27 @@ body {
 }
 
 .connection {
-  stroke: #f8f8f8;
+  stroke: #d8d8d8;
   stroke-width: 1px;
   fill: none;
+}
+
+.connector-circle__container {
+  padding: 2px;
+  display: inline-block;
+}
+
+.connector-circle {
+  stroke-width: 1px;
+  stroke: #d8d8d8;
+  fill: none;
+}
+
+.connector-circle--connected {
+  stroke: none;
+  fill: #d8d8d8;
+}
+
+.highlight-letters {
+  color: #ab4642;
 }

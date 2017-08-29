@@ -329,9 +329,12 @@ export default (state = initialState, action) => {
         return { type: 'block', blockId: block.get('id') };
       }
 
-      const inputHoveredIdx = blockSpec.inputs.slice().reverse().findIndex((_, index) => {
-        return xAxisMatches && cursor.get('y') === position.get('y') - (index + 1);
-      });
+      const inputHoveredIdx = blockSpec.inputs
+        .slice()
+        .reverse()
+        .findIndex((_, index) => {
+          return xAxisMatches && cursor.get('y') === position.get('y') - (index + 1);
+        });
       const inputHovered = inputHoveredIdx >= 0 ? blockSpec.inputs.slice().reverse()[inputHoveredIdx] : false;
 
       if (inputHovered) {
@@ -467,7 +470,10 @@ export default (state = initialState, action) => {
     const blockLetters = generateLetterCodes(blockCount).reduce((memo, letter, i) => {
       return {
         ...memo,
-        [letter]: state.getIn(['graph', 'blocks']).valueSeq().getIn([i, 'id'])
+        [letter]: state
+          .getIn(['graph', 'blocks'])
+          .valueSeq()
+          .getIn([i, 'id'])
       };
     }, {});
 
@@ -501,13 +507,17 @@ export default (state = initialState, action) => {
   }
 
   if (type === SET_BLOCK_STATE) {
-    const currentState = state.getIn(['graph', 'blocks', payload.blockId, 'state']);
+    const blockExists = state.hasIn(['graph', 'blocks', payload.blockId]);
 
-    // mergeIn wasn't working here, I want state to be plain object inside of immutable map...
-    state = state.setIn(['graph', 'blocks', payload.blockId, 'state'], {
-      ...(currentState || {}),
-      ...payload.patch
-    });
+    if (blockExists) {
+      const currentState = state.getIn(['graph', 'blocks', payload.blockId, 'state']);
+
+      // mergeIn wasn't working here, I want state to be plain object inside of immutable map - it's easier to manage on graph side
+      state = state.setIn(['graph', 'blocks', payload.blockId, 'state'], {
+        ...(currentState || {}),
+        ...payload.patch
+      });
+    }
   }
 
   if (IS_DEBUG && state) {
