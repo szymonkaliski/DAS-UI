@@ -33,7 +33,6 @@ class UpsertBlock extends Component {
     autobind(this);
 
     this.state = {
-      // TODO: edit existing block!
       block: DEFAULT_BLOCK
     };
   }

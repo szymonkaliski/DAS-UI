@@ -11,19 +11,20 @@ import reducer from './reducers';
 import { IS_DEBUG, GRID_SIZE } from './constants';
 
 import {
-  moveCursor,
-  moveBlock,
-  resizeBlock,
-  showNewBlockPrompt,
-  connectFromOutput,
+  cancelConnectOrFind,
   connectFromInput,
   connectFromInputTypedLetter,
+  connectFromOutput,
   connectFromOutputTypedLetter,
   deleteBlock,
   deleteConnectionFromInput,
   deleteConnectionFromOutput,
   findBlock,
-  findBlockTypedLetter
+  findBlockTypedLetter,
+  moveBlock,
+  moveCursor,
+  resizeBlock,
+  showNewBlockPrompt
 } from './actions';
 
 import Blocks from './components/blocks';
@@ -98,24 +99,27 @@ class App extends Component {
   onKeydown(e) {
     const { key, target } = e;
     const { isConnectingFromInput, isConnectingFromOutput, isFindingBlock } = this.props;
+    const isLetter = key.match(/[a-z]/i);
 
     if (target.localName !== 'body') {
       return;
     }
 
-    // TODO: if not-letter then cancel
+    if ((isConnectingFromInput || isConnectingFromOutput || isFindingBlock) && !isLetter) {
+      this.props.cancelConnectOrFind();
+      return;
+    }
+
     if (isConnectingFromInput) {
       this.props.connectFromInputTypedLetter(key);
       return;
     }
 
-    // TODO: if not-letter then cancel
     if (isConnectingFromOutput) {
       this.props.connectFromOutputTypedLetter(key);
       return;
     }
 
-    // TODO: if not-letter then cancel
     if (isFindingBlock) {
       this.props.findBlockTypedLetter(key);
       return;
@@ -213,19 +217,20 @@ const mapStateToProps = state => {
 const AppMeasured = withContentRect('bounds')(App);
 
 const AppConnected = connect(mapStateToProps, {
-  moveCursor,
-  moveBlock,
-  resizeBlock,
-  showNewBlockPrompt,
-  connectFromOutput,
+  cancelConnectOrFind,
   connectFromInput,
   connectFromInputTypedLetter,
+  connectFromOutput,
   connectFromOutputTypedLetter,
   deleteBlock,
   deleteConnectionFromInput,
   deleteConnectionFromOutput,
   findBlock,
-  findBlockTypedLetter
+  findBlockTypedLetter,
+  moveBlock,
+  moveCursor,
+  resizeBlock,
+  showNewBlockPrompt
 })(AppMeasured);
 
 ReactDOM.render(

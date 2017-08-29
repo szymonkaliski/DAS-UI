@@ -4,29 +4,30 @@ import times from 'lodash.times';
 import leftPad from 'left-pad';
 
 import {
-  IS_DEBUG,
-  DEFAULT_BLOCK_WIDTH,
-  MIN_BLOCK_WIDTH,
-  MIN_BLOCK_HEIGHT,
-  MOVE_CURSOR,
-  MOVE_BLOCK,
-  RESIZE_BLOCK,
-  CREATE_BLOCK,
-  UPSERT_BLOCK,
+  CANCEL_CONNECT_OR_FIND,
   CANCEL_UPSERT_BLOCK,
-  NEW_BLOCK_NAME,
-  SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
   CONNECT_FROM_INPUT,
-  CONNECT_FROM_OUTPUT,
   CONNECT_FROM_INPUT_TYPED_LETTER,
+  CONNECT_FROM_OUTPUT,
   CONNECT_FROM_OUTPUT_TYPED_LETTER,
+  CREATE_BLOCK,
+  DEFAULT_BLOCK_WIDTH,
   DELETE_BLOCK,
   DELETE_CONNECTION_FROM_INPUT,
   DELETE_CONNECTION_FROM_OUTPUT,
   FIND_BLOCK,
   FIND_BLOCK_TYPED_LETTER,
-  SET_BLOCK_STATE
+  IS_DEBUG,
+  MIN_BLOCK_HEIGHT,
+  MIN_BLOCK_WIDTH,
+  MOVE_BLOCK,
+  MOVE_CURSOR,
+  NEW_BLOCK_NAME,
+  RESIZE_BLOCK,
+  SET_BLOCK_STATE,
+  SHOW_NEW_BLOCK_PROMPT,
+  UPSERT_BLOCK
 } from '../constants';
 
 import { executeBlockSrc } from '../utils';
@@ -88,16 +89,12 @@ const TEMP_BLOCK_BUTTON = {
   outputs: ['click'],
   code: ({ outputs, state }) => {
     state.subscribe(click => {
+      console.log('state got', click, 'outputing through click...');
       outputs.click.onNext(click);
     });
   },
   ui: ({ setState }) => {
-    return window.DOM.button(
-      {
-        onClick: () => setState({ click: new Date() })
-      },
-      'clickme'
-    );
+    return window.DOM.button({ onClick: () => setState({ click: new Date() }) }, 'clickme');
   }
 };
 
@@ -504,6 +501,10 @@ export default (state = initialState, action) => {
         .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: matchingBlockId }))
         .setIn(['ui', 'findingBlock'], false);
     }
+  }
+
+  if (type === CANCEL_CONNECT_OR_FIND) {
+    state = state.setIn(['ui', 'findingBlock'], false).setIn(['ui', 'newConnection'], false);
   }
 
   if (type === SET_BLOCK_STATE) {

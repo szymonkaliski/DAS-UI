@@ -1,22 +1,23 @@
 import {
-  MOVE_CURSOR,
-  MOVE_BLOCK,
-  RESIZE_BLOCK,
-  CREATE_BLOCK,
-  UPSERT_BLOCK,
+  CANCEL_CONNECT_OR_FIND,
   CANCEL_UPSERT_BLOCK,
-  SHOW_NEW_BLOCK_PROMPT,
   CLOSE_NEW_BLOCK_PROMPT,
   CONNECT_FROM_INPUT,
-  CONNECT_FROM_OUTPUT,
   CONNECT_FROM_INPUT_TYPED_LETTER,
+  CONNECT_FROM_OUTPUT,
   CONNECT_FROM_OUTPUT_TYPED_LETTER,
+  CREATE_BLOCK,
   DELETE_BLOCK,
   DELETE_CONNECTION_FROM_INPUT,
   DELETE_CONNECTION_FROM_OUTPUT,
   FIND_BLOCK,
   FIND_BLOCK_TYPED_LETTER,
-  SET_BLOCK_STATE
+  MOVE_BLOCK,
+  MOVE_CURSOR,
+  RESIZE_BLOCK,
+  SET_BLOCK_STATE,
+  SHOW_NEW_BLOCK_PROMPT,
+  UPSERT_BLOCK,
 } from '../constants';
 
 export const moveCursor = (x, y) => ({
@@ -44,7 +45,7 @@ export const upsertBlock = block => ({
   payload: { block }
 });
 
-export const cancelUpsertBlock = ()=> ({
+export const cancelUpsertBlock = () => ({
   type: CANCEL_UPSERT_BLOCK
 });
 
@@ -103,4 +104,8 @@ export const findBlockTypedLetter = letter => ({
 export const setBlockState = (blockId, patch) => ({
   type: SET_BLOCK_STATE,
   payload: { blockId, patch }
-})
+});
+
+export const cancelConnectOrFind = () => ({
+  type: CANCEL_CONNECT_OR_FIND
+});
