@@ -158,7 +158,7 @@ const Block = ({
         {spec.ui && (
           <div>
             {spec.ui({
-              ...block.state,
+              state: block.state,
               setState: patch => setBlockState(patch)
             })}
           </div>

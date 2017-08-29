@@ -191,6 +191,55 @@ const parseBlock = str => {
 
 const stringified = stringifyBlock(tapBlock);
 
-console.log(stringified);
+// console.log(stringified);
+// console.log(parseBlock(stringified));
 
-console.log(parseBlock(stringified));
+const EMPTY_BLOCK = `
+{
+  // block is an object...
+
+  // ...with name - will appear in new block dropdown
+  name: 'sample block',
+
+  // ...has some inputs
+  inputs: [ 'a', 'b', 'c' ],
+
+  // ...and outputs
+  outputs: [ 'x', 'y', 'z' ],
+
+  // code - runs the block
+  // * inputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - changes on input
+  // * outputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - send changes over output
+  // * state - internal \`rx.Subject\` - changes when setState is used
+  // * setState - used to change the \`state\` - communicates \`code\` with \`ui\`
+  code: ({ inputs, outputs, state, setState }) => {
+    inputs.a.subscribe(a => {
+      console.log('a:' + a);
+
+      outputs.x.onNext('new a:' + a);
+    });
+
+    state.subscribe(stateValue => {
+      outputs.z.onNext('new click date:' + stateValue.clickedAt);
+    });
+
+    setInterval(() => {
+      setState({ date: new Date() });
+    }, 1000);
+  },
+
+  // ui - optional React ui for block
+  // * state - current state as plain object
+  // * setState - same as in code, used to communicate
+  // ui has access to \`DOM\` which is \`require('react-dom-factories')\`
+  ui: ({ state, setState }) => {
+    return DOM.div(
+      { onClick: () => setState({ clickedAt: new Date() }) },
+      "date",
+      state.date
+    );
+  }
+}`;
+
+console.log(executeBlockSrc(EMPTY_BLOCK));
+

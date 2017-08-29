@@ -89,7 +89,6 @@ const TEMP_BLOCK_BUTTON = {
   outputs: ['click'],
   code: ({ outputs, state }) => {
     state.subscribe(click => {
-      console.log('state got', click, 'outputing through click...');
       outputs.click.onNext(click);
     });
   },
@@ -102,8 +101,15 @@ const TEMP_BLOCK_LOGGER = {
   name: 'logger',
   inputs: ['log'],
   outputs: [],
-  code: ({ inputs, state, setState }) => {
-    inputs.log.subscribe(text => console.log(text));
+
+  code: ({ inputs, setState }) => {
+    inputs.log.subscribe(log => {
+      setState({ log });
+    });
+  },
+
+  ui: ({ state }) => {
+    return window.DOM.pre({}, state.log);
   }
 };
 
@@ -119,13 +125,10 @@ const TEMP_BLOCK_TICKER = {
       setState({ counter });
       counter++;
     }, 1000);
-
-    // state.subscribe(val => {
-    //   console.log('ticker state updated', val);
-    // })
   },
-  ui: ({ counter }) => {
-    return 'tick: ' + counter;
+
+  ui: ({ state }) => {
+    return 'tick: ' + state.counter;
   }
 };
 
@@ -443,21 +446,19 @@ export default (state = initialState, action) => {
       );
   }
 
-  // TODO: if block has multiple inputs, deletes wrong things
   if (type === DELETE_CONNECTION_FROM_INPUT) {
     const { blockId, input } = payload;
 
     state = state.updateIn(['graph', 'connections'], connections =>
-      connections.filter(connection => connection.get('toId') !== blockId && connection.get('toInput') !== input)
+      connections.filter(connection => !(connection.get('toId') === blockId && connection.get('toInput') === input))
     );
   }
 
-  // TODO: if block has multiple outputs, deletes wrong things
   if (type === DELETE_CONNECTION_FROM_OUTPUT) {
     const { blockId, output } = payload;
 
     state = state.updateIn(['graph', 'connections'], connections =>
-      connections.filter(connection => connection.get('fromId') !== blockId && connection.get('toOutput') !== output)
+      connections.filter(connection => !(connection.get('fromId') === blockId && connection.get('toOutput') === output))
     );
   }
 

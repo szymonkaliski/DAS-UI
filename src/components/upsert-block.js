@@ -12,18 +12,52 @@ import 'brace/keybinding/vim';
 import { upsertBlock, cancelUpsertBlock } from '../actions';
 import { executeBlockSrc } from '../utils';
 
-const DEFAULT_BLOCK = `
+const EMPTY_BLOCK = `
 {
+  // block is an object...
+
+  // ...with name - will appear in new block dropdown
   name: 'sample block',
 
+  // ...has some inputs
   inputs: [ 'a', 'b', 'c' ],
+
+  // ...and outputs
   outputs: [ 'x', 'y', 'z' ],
 
-  code: ({ inputs, outputs, state }) => {
+  // code - runs the block
+  // * inputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - changes on input
+  // * outputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - send changes over output
+  // * state - internal \`rx.Subject\` - changes when setState is used
+  // * setState - used to change the \`state\` - communicates \`code\` with \`ui\`
+  code: ({ inputs, outputs, state, setState }) => {
+    inputs.a.subscribe(a => {
+      console.log('a:' + a);
+
+      outputs.x.onNext('new a:' + a);
+    });
+
+    state.subscribe(stateValue => {
+      console.log('new state', stateValue)
+
+      outputs.z.onNext('new click date:' + stateValue.clickedAt);
+    });
+
+    setInterval(() => {
+      setState({ date: new Date().getTime() });
+    }, 1000);
   },
 
+  // ui - optional React ui for block
+  // * state - current state as plain object
+  // * setState - same as in code, used to communicate
+  // ui has access to \`DOM\` which is \`require('react-dom-factories')\`
   ui: ({ state, setState }) => {
-    return DOM.div(null, "sample block");
+    return DOM.div(
+      { onClick: () => setState({ clickedAt: new Date().getTime() }) },
+      "date",
+      state.date
+    );
   }
 }`;
 
@@ -33,7 +67,7 @@ class UpsertBlock extends Component {
     autobind(this);
 
     this.state = {
-      block: DEFAULT_BLOCK
+      block: EMPTY_BLOCK
     };
   }
 
