@@ -10,6 +10,7 @@ import {
   DELETE_BLOCK,
   DELETE_CONNECTION_FROM_INPUT,
   DELETE_CONNECTION_FROM_OUTPUT,
+  EDIT_BLOCK_SPEC,
   FIND_BLOCK,
   FIND_BLOCK_TYPED_LETTER,
   MOVE_BLOCK,
@@ -108,4 +109,9 @@ export const setBlockState = (blockId, patch) => ({
 
 export const cancelConnectOrFind = () => ({
   type: CANCEL_CONNECT_OR_FIND
+});
+
+export const editBlockSpec = (blockId) => ({
+  type: EDIT_BLOCK_SPEC,
+  payload: { blockId }
 });

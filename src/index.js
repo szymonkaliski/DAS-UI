@@ -19,6 +19,7 @@ import {
   deleteBlock,
   deleteConnectionFromInput,
   deleteConnectionFromOutput,
+  editBlockSpec,
   findBlock,
   findBlockTypedLetter,
   moveBlock,
@@ -96,6 +97,18 @@ class App extends Component {
     }
   }
 
+  editBlockSpec() {
+    const { hovered } = this.props;
+
+    if (!hovered) {
+      return;
+    }
+
+    if (hovered.type === 'block') {
+      this.props.editBlockSpec(hovered.blockId);
+    }
+  }
+
   onKeydown(e) {
     const { key, target } = e;
     const { isConnectingFromInput, isConnectingFromOutput, isFindingBlock } = this.props;
@@ -143,10 +156,11 @@ class App extends Component {
       '-': () => this.props.resizeBlock(0, -1),
       _: () => this.props.resizeBlock(0, -1),
 
-      n: () => this.props.showNewBlockPrompt(),
       c: () => this.makeConnections(),
       d: () => this.deleteHovered(),
-      f: () => this.props.findBlock()
+      e: () => this.editBlockSpec(),
+      f: () => this.props.findBlock(),
+      n: () => this.props.showNewBlockPrompt()
     };
 
     if (keyFns[key]) {
@@ -225,6 +239,7 @@ const AppConnected = connect(mapStateToProps, {
   deleteBlock,
   deleteConnectionFromInput,
   deleteConnectionFromOutput,
+  editBlockSpec,
   findBlock,
   findBlockTypedLetter,
   moveBlock,

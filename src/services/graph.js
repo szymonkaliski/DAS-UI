@@ -3,6 +3,7 @@ import { Subject } from 'rx';
 import autobind from 'react-autobind';
 import makeDiff from 'immutable-diff';
 
+import { executeBlockSrc } from '../utils';
 import { setBlockState } from '../actions';
 
 const streamsFromSpec = ({ inputs = [], outputs = [] }) => {
@@ -23,6 +24,7 @@ class Graph {
 
     this.store = store;
     this.prevGraphState = fromJS({ blocks: {}, connections: {} });
+    this.prevBlockSpecState = this.getBlockSpecState();
 
     this.blocks = {};
     this.connections = {};
@@ -32,15 +34,20 @@ class Graph {
   }
 
   getBlockSpec(blockName) {
-    return { ...this.store.getState().getIn(['blockSpecs', blockName]) };
+    return executeBlockSrc(this.getBlockSpecState().getIn([blockName, 'src']));
   }
 
   getGraphStoreState() {
     return this.store.getState().get('graph');
   }
 
+  getBlockSpecState() {
+    return this.store.getState().get('blockSpecs');
+  }
+
   onStoreChange() {
     const graphState = this.getGraphStoreState();
+    const blockSpecState = this.getBlockSpecState();
 
     if (!graphState.equals(this.prevGraphState)) {
       const diff = makeDiff(this.prevGraphState, graphState);
@@ -98,11 +105,51 @@ class Graph {
 
       this.prevGraphState = graphState;
     }
+
+    if (!blockSpecState.equals(this.prevBlockSpecState)) {
+      const diff = makeDiff(this.prevBlockSpecState, blockSpecState);
+
+      console.log('block spec diff', diff);
+
+      diff.forEach(singleDiff => {
+        const blockSpecName = singleDiff.getIn(['path', 0]);
+
+        const blocks = graphState.get('blocks').filter(block => block.get('name') === blockSpecName);
+
+        const blocksIds = blocks.map(block => block.get('id'));
+        const blocksConnections = graphState
+          .get('connections')
+          .filter(connection => blocksIds.some(id => connection.get('fromId') === id || connection.get('toId') === id));
+
+        // destory and rebuild blocks and connections to refresh the graph with new code...
+
+        blocksConnections.forEach(connection => {
+          this.removeConnection({ id: connection.get('id') });
+        });
+
+        blocks.forEach(block => {
+          this.removeBlock({ id: block.get('id') });
+        });
+
+        blocks.forEach(block => {
+          this.addBlock({
+            id: block.get('id'),
+            blockName: block.get('name')
+          });
+        });
+
+        blocksConnections.forEach(connection => {
+          this.addConnection(connection.toJS());
+        });
+      });
+
+      this.prevBlockSpecState = blockSpecState;
+    }
   }
 
   addBlock({ id, blockName }) {
     if (this.blocks[id]) {
-      console.warn(`tried creating already existing block with: ${id} ${blockName}`);
+      console.warn(`tried creating already existing block id: ${id} (${blockName})`);
       return;
     }
 
@@ -113,11 +160,6 @@ class Graph {
     this.blocks[id] = blockSpec;
     this.blocks[id].streams = streams;
 
-    if (!this.blocks[id].code) {
-      console.warn(`tried to run .code() on non-existing block: ${id} ${blockName}`);
-      return;
-    }
-
     this.blocks[id].code({
       ...streams,
       setState: patch => this.store.dispatch(setBlockState(id, patch))
@@ -125,6 +167,11 @@ class Graph {
   }
 
   addConnection({ id, fromId, fromOutput, toId, toInput }) {
+    if (this.connections[id]) {
+      console.warn(`tried creating already existing connection id: ${id}`);
+      return;
+    }
+
     const outputStream = this.blocks[fromId].streams.outputs[fromOutput];
     const inputStream = this.blocks[toId].streams.inputs[toInput];
 
@@ -132,10 +179,24 @@ class Graph {
   }
 
   removeBlock({ id }) {
+    if (!this.blocks[id]) {
+      console.warn(`tried removing non-existing block id: ${id}`);
+      return;
+    }
+
+    if (this.blocks[id].cleanup) {
+      this.blocks[id].cleanup();
+    }
+
     delete this.blocks[id];
   }
 
   removeConnection({ id }) {
+    if (!this.connections[id]) {
+      console.warn(`tried removing non-existing connection id: ${id}`);
+      return;
+    }
+
     this.connections[id].dispose();
 
     delete this.connections[id];

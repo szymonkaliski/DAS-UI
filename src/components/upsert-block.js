@@ -9,65 +9,17 @@ import 'brace/mode/javascript';
 import 'brace/theme/github';
 import 'brace/keybinding/vim';
 
-import { upsertBlock, cancelUpsertBlock } from '../actions';
+import { NEW_BLOCK_NAME, DEFAULT_BLOCK_SPEC } from '../constants';
 import { executeBlockSrc } from '../utils';
-
-const EMPTY_BLOCK = `
-{
-  // block is an object...
-
-  // ...with name - will appear in new block dropdown
-  name: 'sample block',
-
-  // ...has some inputs
-  inputs: [ 'a', 'b', 'c' ],
-
-  // ...and outputs
-  outputs: [ 'x', 'y', 'z' ],
-
-  // code - runs the block
-  // * inputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - changes on input
-  // * outputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - send changes over output
-  // * state - internal \`rx.Subject\` - changes when setState is used
-  // * setState - used to change the \`state\` - communicates \`code\` with \`ui\`
-  code: ({ inputs, outputs, state, setState }) => {
-    inputs.a.subscribe(a => {
-      console.log('a:' + a);
-
-      outputs.x.onNext('new a:' + a);
-    });
-
-    state.subscribe(stateValue => {
-      console.log('new state', stateValue)
-
-      outputs.z.onNext('new click date:' + stateValue.clickedAt);
-    });
-
-    setInterval(() => {
-      setState({ date: new Date().getTime() });
-    }, 1000);
-  },
-
-  // ui - optional React ui for block
-  // * state - current state as plain object
-  // * setState - same as in code, used to communicate
-  // ui has access to \`DOM\` which is \`require('react-dom-factories')\`
-  ui: ({ state, setState }) => {
-    return DOM.div(
-      { onClick: () => setState({ clickedAt: new Date().getTime() }) },
-      "date",
-      state.date
-    );
-  }
-}`;
+import { upsertBlock, cancelUpsertBlock } from '../actions';
 
 class UpsertBlock extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     autobind(this);
 
     this.state = {
-      block: EMPTY_BLOCK
+      blockSpec: props.blockSpec
     };
   }
 
@@ -88,9 +40,12 @@ class UpsertBlock extends Component {
 
   onSave() {
     try {
-      const block = executeBlockSrc(this.state.block);
+      // this will throw on error
+      const block = executeBlockSrc(this.state.blockSpec);
 
-      this.props.upsertBlock(block);
+      if (!!block) {
+        this.props.upsertBlock(this.state.blockSpec);
+      }
     } catch (e) {
       // TODO: show error
       console.error(e);
@@ -106,13 +61,13 @@ class UpsertBlock extends Component {
           keyboardHandler="vim"
           mode="javascript"
           name="create_block_ace"
-          onChange={text => this.setState({ block: text })}
+          onChange={text => this.setState({ blockSpec: text })}
           ref={ref => (this.aceRef = ref)}
           showGutter={false}
           showLineNumbers={false}
           showPrintMargin={false}
           theme="github"
-          value={this.state.block}
+          value={this.state.blockSpec}
           width="100%"
         />
       </div>
@@ -120,4 +75,12 @@ class UpsertBlock extends Component {
   }
 }
 
-export default connect(null, { upsertBlock, cancelUpsertBlock })(UpsertBlock);
+const mapStateToProps = state => {
+  const upsertBlockOverlayValue = state.getIn(['ui', 'upsertBlockOverlay']);
+
+  return {
+    blockSpec: upsertBlockOverlayValue === NEW_BLOCK_NAME ? DEFAULT_BLOCK_SPEC : upsertBlockOverlayValue
+  };
+};
+
+export default connect(mapStateToProps, { upsertBlock, cancelUpsertBlock })(UpsertBlock);

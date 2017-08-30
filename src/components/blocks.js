@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 
 import { GRID_SIZE } from '../constants';
 import { setBlockState } from '../actions';
+import { executeBlockSrc } from '../utils';
 
 const BORDER = 1;
 const PADDING = 5;
@@ -212,8 +213,18 @@ const mapStateToProps = state => {
       .toJS();
   const isFindingBlock = state.getIn(['ui', 'findingBlock']);
 
+  const plainBlockSpecs = state.get('blockSpecs').toJS();
+  const blockSpecs = Object.keys(plainBlockSpecs).reduce((memo, key) => {
+    const spec = plainBlockSpecs[key];
+    if (spec.hasUI) {
+      spec.ui = executeBlockSrc(spec.src).ui;
+    }
+
+    return { ...memo, [key]: spec };
+  }, {});
+
   return {
-    blockSpecs: state.get('blockSpecs').toJS(),
+    blockSpecs,
     blocks: state
       .getIn(['graph', 'blocks'])
       .valueSeq()
