@@ -3,7 +3,7 @@ import uuid from 'uuid/v4';
 import times from 'lodash.times';
 import leftPad from 'left-pad';
 
-import { executeBlockSrc } from '../utils';
+import { clamp, executeBlockSrc } from '../utils';
 
 import {
   CANCEL_CONNECT_OR_FIND,
@@ -61,8 +61,13 @@ const TEMP_BLOCK_BUTTON = `{
       outputs.click.onNext(click);
     });
   },
-  ui: ({ setState }) => {
-    return window.DOM.button({ onClick: () => setState({ click: new Date() }) }, 'clickme');
+  ui: ({ state, setState }) => {
+    return window.DOM.button(
+      {
+        onClick: () => setState({ click: (new Date()).getTime() })
+      },
+      state.click ? ('lastclick: ' + state.click) : 'clickme'
+    );
   }
 }`;
 
@@ -78,7 +83,12 @@ const TEMP_BLOCK_LOGGER = `{
   },
 
   ui: ({ state }) => {
-    return window.DOM.pre({}, state.log);
+    return window.DOM.pre(
+      {},
+      typeof(state.log) == 'object'
+        ? JSON.stringify(state.log, null, 2)
+        : state.log
+    );
   }
 }`;
 
@@ -149,13 +159,13 @@ const createBlockOnBoard = (state, block) => {
         id,
         name: block,
         position: state.getIn(['ui', 'cursor']).toJS(),
+        state: {},
         size: {
           width: DEFAULT_BLOCK_WIDTH,
           height: state.getIn(['blockSpecs', block, 'hasUI']) ? 5 : 1
         }
       })
     )
-    .setIn(['graph', 'blocks', id, 'state'], {}) // state is plain object!
     .setIn(['ui', 'hovered'], fromJS({ type: 'block', blockId: id }));
 };
 
@@ -369,13 +379,20 @@ export default (state = initialState, action) => {
     const hovered = state.getIn(['ui', 'hovered']);
 
     if (hovered) {
+      const size = state
+        .getIn(['graph', 'blocks', hovered.get('blockId'), 'size'])
+        .update('width', width => Math.max(MIN_BLOCK_WIDTH, width + payload.w))
+        .update('height', height => Math.max(MIN_BLOCK_HEIGHT, height + payload.h));
+
+      const position = state.getIn(['graph', 'blocks', hovered.get('blockId'), 'position']);
+
       state = state
-        .updateIn(['graph', 'blocks', hovered.get('blockId'), 'size'], size =>
-          size
-            .update('width', width => Math.max(MIN_BLOCK_WIDTH, width + payload.w))
-            .update('height', height => Math.max(MIN_BLOCK_HEIGHT, height + payload.h))
-        )
-        .updateIn(['ui', 'cursor'], cursor => cursor.update('x', x => x + payload.w).update('y', y => y + payload.h));
+        .setIn(['graph', 'blocks', hovered.get('blockId'), 'size'], size)
+        .updateIn(['ui', 'cursor'], cursor =>
+          cursor
+            .update('x', x => clamp(x + payload.w, position.get('x'), position.get('x') + size.get('width')))
+            .update('y', y => clamp(y + payload.h, position.get('y'), position.get('y') + size.get('height')))
+        );
     }
   }
 
@@ -522,13 +539,7 @@ export default (state = initialState, action) => {
     const blockExists = state.hasIn(['graph', 'blocks', payload.blockId]);
 
     if (blockExists) {
-      const currentState = state.getIn(['graph', 'blocks', payload.blockId, 'state']);
-
-      // mergeIn wasn't working here, I want state to be plain object inside of immutable map - it's easier to manage on graph side
-      state = state.setIn(['graph', 'blocks', payload.blockId, 'state'], {
-        ...(currentState || {}),
-        ...payload.patch
-      });
+      state = state.mergeIn(['graph', 'blocks', payload.blockId, 'state'], fromJS(payload.patch));
     }
   }
 

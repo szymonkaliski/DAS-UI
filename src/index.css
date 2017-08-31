@@ -199,6 +199,10 @@ body {
   top: 0;
 }
 
+.block__ui {
+  overflow: hidden;
+}
+
 .connections {
   pointer-events: none;
 }

@@ -157,7 +157,7 @@ const Block = ({
         )}
         {block.name}
         {spec.ui && (
-          <div>
+          <div className="block__ui">
             {spec.ui({
               state: block.state,
               setState: patch => setBlockState(patch)

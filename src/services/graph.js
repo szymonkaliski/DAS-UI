@@ -1,7 +1,7 @@
-import { fromJS } from 'immutable';
-import { Subject } from 'rx';
 import autobind from 'react-autobind';
 import makeDiff from 'immutable-diff';
+import { Subject } from 'rx';
+import { fromJS } from 'immutable';
 
 import { executeBlockSrc } from '../utils';
 import { setBlockState } from '../actions';
@@ -49,22 +49,25 @@ class Graph {
     const graphState = this.getGraphStoreState();
     const blockSpecState = this.getBlockSpecState();
 
+    let futureOps = [];
+
     if (!graphState.equals(this.prevGraphState)) {
       const diff = makeDiff(this.prevGraphState, graphState);
-
-      console.info('diff', diff);
 
       const ops = {
         add: diff => {
           const pathType = diff.getIn(['path', 0]);
 
           if (pathType === 'blocks') {
-            this.addBlock({
-              id: diff.getIn(['path', 1]),
-              blockName: diff.getIn(['value', 'name'])
-            });
+            futureOps.push([
+              this.addBlock,
+              {
+                id: diff.getIn(['path', 1]),
+                blockName: diff.getIn(['value', 'name'])
+              }
+            ]);
           } else if (pathType === 'connections') {
-            this.addConnection(diff.get('value').toJS());
+            futureOps.push([this.addConnection, diff.get('value').toJS()]);
           }
         },
 
@@ -72,16 +75,9 @@ class Graph {
           const pathType = diff.getIn(['path', 0]);
 
           if (pathType === 'blocks') {
-            this.removeBlock({ id: diff.getIn(['path', 1]) });
+            futureOps.push([this.removeBlock, { id: diff.getIn(['path', 1]) }]);
           } else if (pathType === 'connections') {
-            this.removeConnection({ id: diff.getIn(['path', 1]) });
-          }
-        },
-
-        replace: diff => {
-          if (diff.getIn(['path', 2]) === 'state') {
-            const blockId = diff.getIn(['path', 1]);
-            this.updateBlockState({ id: blockId, state: graphState.getIn(['blocks', blockId, 'state']) });
+            futureOps.push([this.removeConnection, { id: diff.getIn(['path', 1]) }]);
           }
         }
       };
@@ -89,9 +85,24 @@ class Graph {
       diff.forEach(singleDiff => {
         const op = ops[singleDiff.get('op')];
         const isKeyIgnored = IGNORED_PATH_KEYS.some(key => singleDiff.get('path').contains(key));
+        const isStateChanged = singleDiff.getIn(['path', 2]) === 'state';
 
         if (isKeyIgnored) {
           console.info('ignornig diff', { diff: diff.toJS() });
+          return;
+        }
+
+        if (isStateChanged) {
+          const blockId = singleDiff.getIn(['path', 1]);
+
+          futureOps.push([
+            this.updateBlockState,
+            {
+              id: blockId,
+              state: graphState.getIn(['blocks', blockId, 'state']).toJS()
+            }
+          ]);
+
           return;
         }
 
@@ -108,8 +119,6 @@ class Graph {
 
     if (!blockSpecState.equals(this.prevBlockSpecState)) {
       const diff = makeDiff(this.prevBlockSpecState, blockSpecState);
-
-      console.log('block spec diff', diff);
 
       diff.forEach(singleDiff => {
         const blockSpecName = singleDiff.getIn(['path', 0]);
@@ -145,6 +154,8 @@ class Graph {
 
       this.prevBlockSpecState = blockSpecState;
     }
+
+    futureOps.forEach(([op, args]) => op(args));
   }
 
   addBlock({ id, blockName }) {
