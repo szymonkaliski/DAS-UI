@@ -82,6 +82,7 @@ const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter, typ
 
 const Block = ({
   block,
+  grid,
   spec,
   cursor,
   hovered,
@@ -108,8 +109,8 @@ const Block = ({
     <div
       className="block__wrapper"
       style={{
-        top: block.position.y * GRID_SIZE,
-        left: block.position.x * GRID_SIZE
+        top: (block.position.y - grid.offsetY) * GRID_SIZE,
+        left: (block.position.x - grid.offsetX) * GRID_SIZE
       }}
     >
       {spec.inputs
@@ -172,6 +173,7 @@ const Block = ({
 const Blocks = ({
   blockSpecs,
   blocks,
+  grid,
   cursor,
   hovered,
   letterHovers,
@@ -187,6 +189,7 @@ const Blocks = ({
         <Block
           key={block.id}
           block={block}
+          grid={grid}
           cursor={cursor}
           spec={blockSpecs[block.name]}
           hovered={hovered.blockId === block.id && hovered}
@@ -205,6 +208,7 @@ const Blocks = ({
 const mapStateToProps = state => {
   const hovered = state.getIn(['ui', 'hovered']);
   const isConnecting = !!state.getIn(['ui', 'newConnection']);
+
   const letterHovers =
     isConnecting &&
     state
@@ -214,6 +218,7 @@ const mapStateToProps = state => {
   const isFindingBlock = state.getIn(['ui', 'findingBlock']);
 
   const plainBlockSpecs = state.get('blockSpecs').toJS();
+
   const blockSpecs = Object.keys(plainBlockSpecs).reduce((memo, key) => {
     const spec = plainBlockSpecs[key];
     if (spec.hasUI) {
@@ -242,7 +247,8 @@ const mapStateToProps = state => {
           .toJS()
       : false,
     isConnectingFromInput: isConnecting && hovered.get('input'),
-    isConnectingFromOutput: isConnecting && hovered.get('output')
+    isConnectingFromOutput: isConnecting && hovered.get('output'),
+    grid: state.getIn(['ui', 'grid']).toJS()
   };
 };
 

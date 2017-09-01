@@ -30,7 +30,9 @@ import {
   RESIZE_BLOCK,
   SET_BLOCK_STATE,
   SHOW_NEW_BLOCK_PROMPT,
-  UPSERT_BLOCK
+  UPSERT_BLOCK,
+  UPDATE_CONTENT_SIZE,
+  GRID_SIZE
 } from '../constants';
 
 let initialState = fromJS({
@@ -40,6 +42,12 @@ let initialState = fromJS({
     connections: {}
   },
   ui: {
+    grid: {
+      marginLeft: 0,
+      marginTop: 0,
+      width: 0,
+      height: 0
+    },
     cursor: {
       x: 0,
       y: 0
@@ -295,9 +303,30 @@ export default (state = initialState, action) => {
   console.info(`action: ${type}`, payload || {});
 
   if (type === MOVE_CURSOR) {
-    state = state.updateIn(['ui', 'cursor'], cursor =>
-      cursor.update('x', x => x + payload.x).update('y', y => y + payload.y)
-    );
+    const cursor = state
+      .getIn(['ui', 'cursor'])
+      .update('x', x => x + payload.x)
+      .update('y', y => y + payload.y);
+
+    state = state.setIn(['ui', 'cursor'], cursor).updateIn(['ui', 'grid'], grid => {
+      if (cursor.get('x') < grid.get('offsetX')) {
+        grid = grid.set('offsetX', cursor.get('x'));
+      }
+
+      if (cursor.get('x') >= grid.get('offsetX') + grid.get('width') - 1) {
+        grid = grid.set('offsetX', grid.get('offsetX') + 1);
+      }
+
+      if (cursor.get('y') < grid.get('offsetY')) {
+        grid = grid.set('offsetY', cursor.get('y'));
+      }
+
+      if (cursor.get('y') >= grid.get('offsetY') + grid.get('height') - 1) {
+        grid = grid.set('offsetY', grid.get('offsetY') + 1);
+      }
+
+      return grid;
+    });
 
     const hovered = state.getIn(['graph', 'blocks']).reduce((memo, block) => {
       // first match wins
@@ -332,6 +361,7 @@ export default (state = initialState, action) => {
         .findIndex((_, index) => {
           return xAxisMatches && cursor.get('y') === position.get('y') - (index + 1);
         });
+
       const inputHovered =
         inputHoveredIdx >= 0
           ? blockSpec
@@ -541,6 +571,29 @@ export default (state = initialState, action) => {
     if (blockExists) {
       state = state.mergeIn(['graph', 'blocks', payload.blockId, 'state'], fromJS(payload.patch));
     }
+  }
+
+  if (type === UPDATE_CONTENT_SIZE) {
+    const { width, height } = payload;
+
+    const gridWidthCount = Math.floor(width / GRID_SIZE) - 1;
+    const gridHeightCount = Math.floor(height / GRID_SIZE) - 1;
+    const gridWidth = gridWidthCount * GRID_SIZE;
+    const gridHeight = gridHeightCount * GRID_SIZE;
+    const gridMarginLeft = Math.floor((width - gridWidth) / 2 + GRID_SIZE / 2);
+    const gridMarginTop = Math.floor((height - gridHeight) / 2 + GRID_SIZE / 2);
+
+    state = state.setIn(
+      ['ui', 'grid'],
+      fromJS({
+        marginLeft: gridMarginLeft,
+        marginTop: gridMarginTop,
+        width: gridWidthCount,
+        height: gridHeightCount,
+        offsetX: 0,
+        offsetY: 0
+      })
+    );
   }
 
   if (IS_DEBUG && state) {

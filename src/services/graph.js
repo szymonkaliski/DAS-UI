@@ -88,7 +88,6 @@ class Graph {
         const isStateChanged = singleDiff.getIn(['path', 2]) === 'state';
 
         if (isKeyIgnored) {
-          console.info('ignornig diff', { diff: diff.toJS() });
           return;
         }
 

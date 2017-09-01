@@ -100,14 +100,14 @@ class NewBlock extends Component {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    blockSpecs: state
-      .get('blockSpecs')
-      .valueSeq()
-      .toJS()
-      .map(block => ({ ...block, id: block.name }))
-  };
-};
+const mapStateToProps = state => ({
+  x: state.getIn(['ui', 'cursor', 'x']) * GRID_SIZE,
+  y: state.getIn(['ui', 'cursor', 'y']) * GRID_SIZE,
+  blockSpecs: state
+    .get('blockSpecs')
+    .valueSeq()
+    .toJS()
+    .map(block => ({ ...block, id: block.name }))
+});
 
 export default connect(mapStateToProps, { createBlock, closeNewBlockPrompt })(NewBlock);

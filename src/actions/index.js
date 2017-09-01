@@ -19,6 +19,7 @@ import {
   SET_BLOCK_STATE,
   SHOW_NEW_BLOCK_PROMPT,
   UPSERT_BLOCK,
+  UPDATE_CONTENT_SIZE
 } from '../constants';
 
 export const moveCursor = (x, y) => ({
@@ -114,4 +115,9 @@ export const cancelConnectOrFind = () => ({
 export const editBlockSpec = (blockId) => ({
   type: EDIT_BLOCK_SPEC,
   payload: { blockId }
+});
+
+export const updateContentSize = (width, height) => ({
+  type: UPDATE_CONTENT_SIZE,
+  payload: { width, height }
 });

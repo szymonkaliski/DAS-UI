@@ -4,11 +4,11 @@ import ReactDOM from 'react-dom';
 import autobind from 'react-autobind';
 import { connect, Provider } from 'react-redux';
 import { createStore } from 'redux';
-import { withContentRect } from 'react-measure';
+import Measure from 'react-measure';
 
 import createGraph from './services/graph';
 import reducer from './reducers';
-import { IS_DEBUG, GRID_SIZE } from './constants';
+import { IS_DEBUG } from './constants';
 
 import {
   cancelConnectOrFind,
@@ -25,7 +25,8 @@ import {
   moveBlock,
   moveCursor,
   resizeBlock,
-  showNewBlockPrompt
+  showNewBlockPrompt,
+  updateContentSize
 } from './actions';
 
 import Blocks from './components/blocks';
@@ -183,32 +184,40 @@ class App extends Component {
   }
 
   render() {
-    const { cursor, contentRect, measureRef, newBlockPrompt } = this.props;
-    const { width, height } = contentRect.bounds;
-
-    const gridWidthCount = Math.floor(width / GRID_SIZE) - 1;
-    const gridHeightCount = Math.floor(height / GRID_SIZE) - 1;
-    const gridWidth = gridWidthCount * GRID_SIZE;
-    const gridHeight = gridHeightCount * GRID_SIZE;
-    const gridMarginWidth = Math.floor((width - gridWidth) / 2 + GRID_SIZE / 2);
-    const gridMarginHeight = Math.floor((height - gridHeight) / 2 + GRID_SIZE / 2);
-
-    const shouldRender = width > 0 && height > 0;
-
-    const x = cursor.x * GRID_SIZE;
-    const y = cursor.y * GRID_SIZE;
+    const { marginLeft, marginTop, newBlockPrompt } = this.props;
 
     return (
-      <div className="app" ref={measureRef}>
-        <div style={{ transform: `translate(${gridMarginWidth}px, ${gridMarginHeight}px)` }}>
-          {shouldRender && <Board gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} cursor={cursor} />}
-          {shouldRender && <Blocks />}
-          {shouldRender && <Connections gridWidthCount={gridWidthCount} gridHeightCount={gridHeightCount} />}
-          {newBlockPrompt && <NewBlock x={x} y={y} />}
+      <div>
+        <div style={{ transform: `translate(${marginLeft}px, ${marginTop}px)` }}>
+          <Board />
+          <Blocks />
+          <Connections />
+
+          {newBlockPrompt && <NewBlock />}
         </div>
 
         {this.renderOverlays()}
       </div>
+    );
+  }
+}
+
+class AppMeasured extends Component {
+  render() {
+    return (
+      <Measure
+        bounds
+        onResize={contentRect => {
+          const { width, height } = contentRect.bounds;
+          this.props.updateContentSize(width, height);
+        }}
+      >
+        {({ measureRef }) => (
+          <div className="app" ref={measureRef}>
+            <App {...this.props} />
+          </div>
+        )}
+      </Measure>
     );
   }
 }
@@ -218,17 +227,16 @@ const mapStateToProps = state => {
   const isConnecting = !!state.getIn(['ui', 'newConnection']);
 
   return {
-    cursor: state.getIn(['ui', 'cursor']).toJS(),
     hovered: hovered ? hovered.toJS() : null,
     isConnectingFromInput: isConnecting && hovered.get('input'),
     isConnectingFromOutput: isConnecting && hovered.get('output'),
     isFindingBlock: state.getIn(['ui', 'findingBlock']),
-    newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
-    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay'])
+    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
+    marginLeft: state.getIn(['ui', 'grid', 'marginLeft']),
+    marginTop: state.getIn(['ui', 'grid', 'marginTop']),
+    newBlockPrompt: state.getIn(['ui', 'newBlockPrompt'])
   };
 };
-
-const AppMeasured = withContentRect('bounds')(App);
 
 const AppConnected = connect(mapStateToProps, {
   cancelConnectOrFind,
@@ -245,7 +253,8 @@ const AppConnected = connect(mapStateToProps, {
   moveBlock,
   moveCursor,
   resizeBlock,
-  showNewBlockPrompt
+  showNewBlockPrompt,
+  updateContentSize
 })(AppMeasured);
 
 ReactDOM.render(
