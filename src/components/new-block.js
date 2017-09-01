@@ -101,8 +101,8 @@ class NewBlock extends Component {
 }
 
 const mapStateToProps = state => ({
-  x: state.getIn(['ui', 'cursor', 'x']) * GRID_SIZE,
-  y: state.getIn(['ui', 'cursor', 'y']) * GRID_SIZE,
+  x: (state.getIn(['ui', 'cursor', 'x']) - state.getIn(['ui', 'grid', 'offsetX'])) * GRID_SIZE,
+  y: (state.getIn(['ui', 'cursor', 'y']) - state.getIn(['ui', 'grid', 'offsetY'])) * GRID_SIZE,
   blockSpecs: state
     .get('blockSpecs')
     .valueSeq()

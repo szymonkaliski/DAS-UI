@@ -18,12 +18,12 @@ const BoardGrid = ({ grid }) => {
   );
 };
 
-const BoardCursor = ({ position, grid }) => {
+const BoardCursor = ({ cursor, grid }) => {
   return (
     <rect
       className="board__cursor"
-      x={(position.x - grid.offsetX) * GRID_SIZE}
-      y={(position.y - grid.offsetY) * GRID_SIZE}
+      x={(cursor.x - grid.offsetX) * GRID_SIZE}
+      y={(cursor.y - grid.offsetY) * GRID_SIZE}
       width={GRID_SIZE}
       height={GRID_SIZE}
     />
@@ -34,7 +34,7 @@ const Board = ({ cursor, grid }) => {
   return (
     <svg width={grid.width * GRID_SIZE} height={grid.height * GRID_SIZE} className="board">
       <BoardGrid grid={grid} />
-      <BoardCursor position={cursor} grid={grid} />
+      <BoardCursor cursor={cursor} grid={grid} />
     </svg>
   );
 };

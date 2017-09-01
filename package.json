@@ -1,5 +1,5 @@
 {
-  "name": "dasinon",
+  "name": "DAS-UI",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -19,12 +19,13 @@
     "react-redux": "^5.0.5",
     "react-scripts": "1.0.10",
     "redux": "^3.7.2",
+    "redux-thunk": "^2.2.0",
     "rx": "^4.1.0",
     "uuid": "^3.1.0"
   },
   "scripts": {
     "start": "FORCE_COLOR=true BROWSER=none react-scripts start | cat -",
     "build": "react-scripts build",
-    "eject": "react-scripts eject"
+    "publish": "npm run build && firebase deploy"
   }
 }

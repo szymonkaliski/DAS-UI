@@ -1,3 +1,5 @@
+/* global firebase */
+
 import DOM from 'react-dom-factories';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
@@ -40,6 +42,26 @@ import './index.css';
 
 // for blocks ad-hoc UIs
 window.DOM = DOM;
+
+const config = {
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: 'das-ui.firebaseapp.com',
+  databaseURL: 'https://das-ui.firebaseio.com',
+  projectId: 'das-ui',
+  messagingSenderId: process.env.REACT_APP_FIREBASE_SENDER_ID
+};
+
+firebase.initializeApp(config);
+
+// console.log(config);
+
+// firebase
+//   .database()
+//   .ref('test')
+//   .once('value')
+//   .then(snap => {
+//     console.log(snap.key, snap.val());
+//   });
 
 const store = createStore(reducer);
 const graph = createGraph(store);
