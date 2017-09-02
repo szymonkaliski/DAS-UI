@@ -22,6 +22,7 @@ import {
   FIND_BLOCK,
   FIND_BLOCK_TYPED_LETTER,
   GRID_SIZE,
+  HIDE_HELP,
   IS_DEBUG,
   MIN_BLOCK_HEIGHT,
   MIN_BLOCK_WIDTH,
@@ -32,9 +33,11 @@ import {
   RESIZE_BLOCK,
   SAVE_GRAPH_TO_DB_DONE,
   SET_BLOCK_STATE,
+  SHOW_HELP,
   SHOW_NEW_BLOCK_PROMPT,
+  TOGGLE_HELP,
   UPDATE_CONTENT_SIZE,
-  UPSERT_BLOCK,
+  UPSERT_BLOCK
 } from '../constants';
 
 let initialState = fromJS({
@@ -58,6 +61,7 @@ let initialState = fromJS({
     },
     hovered: false,
     upsertBlockOverlay: false,
+    helpOverlay: false,
     newBlockPrompt: false,
     newConnection: false,
     findingBlock: false
@@ -606,6 +610,18 @@ export default (state = initialState, action) => {
 
   if (type === READ_GRAPH_FROM_DB_DONE) {
     state = fromJS(payload.data).set('databaseKey', payload.key);
+  }
+
+  if (type === SHOW_HELP) {
+    state = state.setIn(['ui', 'helpOverlay'], true);
+  }
+
+  if (type === HIDE_HELP) {
+    state = state.setIn(['ui', 'helpOverlay'], false);
+  }
+
+  if (type === TOGGLE_HELP) {
+    state = state.updateIn(['ui', 'helpOverlay'], helpOverlay => !helpOverlay);
   }
 
   if (IS_DEBUG && state) {

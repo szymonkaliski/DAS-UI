@@ -30,19 +30,22 @@ import {
   findBlockTypedLetter,
   moveBlock,
   moveCursor,
+  readGraphFromDB,
   resizeBlock,
   saveGraphToDB,
-  readGraphFromDB,
+  showHelp,
+  toggleHelp,
   showNewBlockPrompt,
   updateContentSize
 } from './actions';
 
 import Blocks from './components/blocks';
-import Connections from './components/connections';
 import Board from './components/board';
-import UpsertBlock from './components/upsert-block';
+import Connections from './components/connections';
+import Help from './components/help';
 import NewBlock from './components/new-block';
 import Overlay from './components/overlay';
+import UpsertBlock from './components/upsert-block';
 
 import './index.css';
 
@@ -84,6 +87,13 @@ class App extends Component {
     if (urlId) {
       this.props.readGraphFromDB(urlId);
     }
+
+    // show help if visiting for first time
+    const lastVisit = localStorage.getItem('lastVisit');
+    if (!lastVisit) {
+      this.props.showHelp();
+      localStorage.setItem('lastVisit', new Date());
+    }
   }
 
   componentWillUmount() {
@@ -93,7 +103,7 @@ class App extends Component {
   componentWillReceiveProps(nextProps) {
     const urlId = get(querystring.parse(window.location.search.replace('?', '')), 'id');
 
-    if (nextProps.databaseKey !== urlId) {
+    if (nextProps.databaseKey && nextProps.databaseKey !== urlId) {
       const queryString = `?id=${nextProps.databaseKey}`;
 
       if (window.history.pushState) {
@@ -200,7 +210,8 @@ class App extends Component {
       f: () => this.props.findBlock(),
       n: () => this.props.showNewBlockPrompt(),
 
-      s: () => this.props.saveGraphToDB()
+      s: () => this.props.saveGraphToDB(),
+      '?': () => this.props.toggleHelp()
     };
 
     if (keyFns[key]) {
@@ -209,13 +220,18 @@ class App extends Component {
   }
 
   renderOverlays() {
-    const { upsertBlockOverlay } = this.props;
+    const { upsertBlockOverlay, helpOverlay } = this.props;
 
     return (
       <div>
         {upsertBlockOverlay && (
           <Overlay>
             <UpsertBlock block={upsertBlockOverlay} />
+          </Overlay>
+        )}
+        {helpOverlay && (
+          <Overlay>
+            <Help />
           </Overlay>
         )}
       </div>
@@ -270,7 +286,8 @@ const mapStateToProps = state => {
     marginLeft: state.getIn(['ui', 'grid', 'marginLeft']),
     marginTop: state.getIn(['ui', 'grid', 'marginTop']),
     newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
-    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay'])
+    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
+    helpOverlay: state.getIn(['ui', 'helpOverlay'])
   };
 };
 
@@ -288,10 +305,12 @@ const AppConnected = connect(mapStateToProps, {
   findBlockTypedLetter,
   moveBlock,
   moveCursor,
+  readGraphFromDB,
   resizeBlock,
   saveGraphToDB,
-  readGraphFromDB,
+  showHelp,
   showNewBlockPrompt,
+  toggleHelp,
   updateContentSize
 })(AppMeasured);
 

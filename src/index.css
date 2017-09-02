@@ -1,30 +1,11 @@
 /* colors: http://chriskempson.com/projects/base16/ */
 
-/* base00 : #181818; */
-/* base01 : #282828; */
-/* base02 : #383838; */
-/* base03 : #585858; */
-/* base04 : #b8b8b8; */
-/* base05 : #d8d8d8; */
-/* base06 : #e8e8e8; */
-/* base07 : #f8f8f8; */
-/* base08 : #ab4642; */
-/* base09 : #dc9656; */
-/* base0A : #f7ca88; */
-/* base0B : #a1b56c; */
-/* base0C : #86c1b9; */
-/* base0D : #7cafc2; */
-/* base0E : #ba8baf; */
-/* base0F : #a16946; */
-
-* {
-  padding: 0;
-  margin: 0;
-}
-
 body {
   font-family: 'Inconsolata', monospace;
   font-size: 12px;
+
+  margin: 0;
+  padding: 0;
 }
 
 .app {
@@ -64,7 +45,7 @@ body {
   left: 0;
   right: 0;
 
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.7777777);
   padding: 20px;
 }
 
@@ -232,3 +213,31 @@ body {
 .highlight-letters {
   color: #ab4642;
 }
+
+.help {
+  color: #d8d8d8;
+  line-height: 16px;
+
+  padding-top: 60px;
+  width: 60%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.help__list {
+  list-style-type: square;
+}
+
+.help__highlight {
+  color: #f8f8f8;
+  background: #282828;
+  padding: 2px 4px;
+}
+
+.help__link {
+  color: #f8f8f8;
+  background: #282828;
+  padding: 2px 4px;
+  text-decoration: underline;
+}
+

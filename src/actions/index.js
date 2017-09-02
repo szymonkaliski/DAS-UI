@@ -15,13 +15,16 @@ import {
   EDIT_BLOCK_SPEC,
   FIND_BLOCK,
   FIND_BLOCK_TYPED_LETTER,
+  HIDE_HELP,
   MOVE_BLOCK,
   MOVE_CURSOR,
   READ_GRAPH_FROM_DB_DONE,
   RESIZE_BLOCK,
   SAVE_GRAPH_TO_DB_DONE,
   SET_BLOCK_STATE,
+  SHOW_HELP,
   SHOW_NEW_BLOCK_PROMPT,
+  TOGGLE_HELP,
   UPDATE_CONTENT_SIZE,
   UPSERT_BLOCK
 } from '../constants';
@@ -160,4 +163,16 @@ export const readGraphFromDB = id => dispatch => {
 export const readGraphFromDBDone = (key, data) => ({
   type: READ_GRAPH_FROM_DB_DONE,
   payload: { data, key }
+});
+
+export const toggleHelp = () => ({
+  type: TOGGLE_HELP
+});
+
+export const showHelp = () => ({
+  type: SHOW_HELP
+});
+
+export const hideHelp = () => ({
+  type: HIDE_HELP
 });

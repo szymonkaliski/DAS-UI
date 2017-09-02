@@ -30,6 +30,9 @@ export const UPSERT_BLOCK = 'UPSERT_BLOCK';
 export const UPDATE_CONTENT_SIZE = 'UPDATE_CONTENT_SIZE';
 export const SAVE_GRAPH_TO_DB_DONE = 'SAVE_GRAPH_TO_DB_DONE';
 export const READ_GRAPH_FROM_DB_DONE = 'READ_GRAPH_FROM_DB_DONE';
+export const SHOW_HELP = 'SHOW_HELP';
+export const HIDE_HELP = 'HIDE_HELP';
+export const TOGGLE_HELP = 'TOGGLE_HELP';
 
 export const DEFAULT_BLOCK_SPEC = `
 {
@@ -65,6 +68,11 @@ export const DEFAULT_BLOCK_SPEC = `
     setInterval(() => {
       setState({ date: new Date().getTime() });
     }, 1000);
+  },
+
+  // cleanup - optional function run when the block is removed from board
+  cleanup: () => {
+    // clean up things like setInterval/setTimeout, etc...
   },
 
   // ui - optional React ui for block
