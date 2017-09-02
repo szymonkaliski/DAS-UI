@@ -79,9 +79,7 @@ class NewBlock extends Component {
             }
           }}
           getItemValue={block => block.id}
-          items={[{ name: `create new${value.length > 0 ? `: ${value}` : '...'}`, id: NEW_BLOCK_NAME }].concat(
-            menuItems
-          )}
+          items={[{ name: 'create new...', id: NEW_BLOCK_NAME }].concat(menuItems)}
           onChange={this.onChange}
           onSelect={this.onSelect}
           renderItem={(item, isHighlighted) => (

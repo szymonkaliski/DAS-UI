@@ -49,6 +49,8 @@ class Graph {
     const graphState = this.getGraphStoreState();
     const blockSpecState = this.getBlockSpecState();
 
+    // first gather operations, and then execute them one by one
+    // fixes bugs where we are trying to run graph that is part old, part new...
     let futureOps = [];
 
     if (!graphState.equals(this.prevGraphState)) {
