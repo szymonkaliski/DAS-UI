@@ -1,3 +1,5 @@
+/* global firebase */
+
 import {
   CANCEL_CONNECT_OR_FIND,
   CANCEL_UPSERT_BLOCK,
@@ -15,11 +17,13 @@ import {
   FIND_BLOCK_TYPED_LETTER,
   MOVE_BLOCK,
   MOVE_CURSOR,
+  READ_GRAPH_FROM_DB_DONE,
   RESIZE_BLOCK,
+  SAVE_GRAPH_TO_DB_DONE,
   SET_BLOCK_STATE,
   SHOW_NEW_BLOCK_PROMPT,
-  UPSERT_BLOCK,
-  UPDATE_CONTENT_SIZE
+  UPDATE_CONTENT_SIZE,
+  UPSERT_BLOCK
 } from '../constants';
 
 export const moveCursor = (x, y) => ({
@@ -112,7 +116,7 @@ export const cancelConnectOrFind = () => ({
   type: CANCEL_CONNECT_OR_FIND
 });
 
-export const editBlockSpec = (blockId) => ({
+export const editBlockSpec = blockId => ({
   type: EDIT_BLOCK_SPEC,
   payload: { blockId }
 });
@@ -120,4 +124,40 @@ export const editBlockSpec = (blockId) => ({
 export const updateContentSize = (width, height) => ({
   type: UPDATE_CONTENT_SIZE,
   payload: { width, height }
+});
+
+export const saveGraphToDB = () => (dispatch, getState) => {
+  const data = getState().toJS();
+
+  // store parent database key
+  if (data.databaseKey) {
+    data.parentDatabaseKey = data.databaseKey;
+    delete data.databaseKey;
+  }
+
+  // TODO: remove default blockSpecs when they are added
+
+  firebase
+    .database()
+    .ref('graphs')
+    .push(data)
+    .then(({ key }) => dispatch(saveGraphToDBDone(key)));
+};
+
+export const saveGraphToDBDone = key => ({
+  type: SAVE_GRAPH_TO_DB_DONE,
+  payload: { key }
+});
+
+export const readGraphFromDB = id => dispatch => {
+  firebase
+    .database()
+    .ref(`graphs/${id}`)
+    .once('value')
+    .then(snap => dispatch(readGraphFromDBDone(snap.key, snap.val())));
+};
+
+export const readGraphFromDBDone = (key, data) => ({
+  type: READ_GRAPH_FROM_DB_DONE,
+  payload: { data, key }
 });

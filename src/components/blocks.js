@@ -32,53 +32,49 @@ const Circle = ({ width = 8, height = 8 }) => (
   </svg>
 );
 
-const Input = ({ i, name, width, isHovered, connectingLetter, typedLetters }) => {
-  return (
-    <div
-      className={classnames('block__input', { 'block__input--hovered': isHovered })}
-      style={{
-        top: (i + 1) * GRID_SIZE * -1,
-        width: width * GRID_SIZE - BORDER * 2,
-        height: GRID_SIZE - BORDER * 2
-      }}
-    >
-      <div className="block__input-content">
-        <Circle />
-        <span className="block__input-name">{name}</span>
+const Input = ({ i, name, width, isHovered, connectingLetter, typedLetters }) => (
+  <div
+    className={classnames('block__input', { 'block__input--hovered': isHovered })}
+    style={{
+      top: (i + 1) * GRID_SIZE * -1,
+      width: width * GRID_SIZE - BORDER * 2,
+      height: GRID_SIZE - BORDER * 2
+    }}
+  >
+    <div className="block__input-content">
+      <Circle />
+      <span className="block__input-name">{name}</span>
 
-        {connectingLetter && (
-          <div className="block__input-letter-hover">
-            <HighlightFoundLetters string={connectingLetter} typed={typedLetters} />
-          </div>
-        )}
-      </div>
+      {connectingLetter && (
+        <div className="block__input-letter-hover">
+          <HighlightFoundLetters string={connectingLetter} typed={typedLetters} />
+        </div>
+      )}
     </div>
-  );
-};
+  </div>
+);
 
-const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter, typedLetters }) => {
-  return (
-    <div
-      className={classnames('block__output', { 'block__output--hovered': isHovered })}
-      style={{
-        top: (i + heightOffset) * GRID_SIZE,
-        width: width * GRID_SIZE - BORDER * 2,
-        height: GRID_SIZE - BORDER * 2
-      }}
-    >
-      <div className="block__output-content">
-        <span className="block__output-name">{name}</span>
-        <Circle />
+const Output = ({ i, heightOffset, name, width, isHovered, connectingLetter, typedLetters }) => (
+  <div
+    className={classnames('block__output', { 'block__output--hovered': isHovered })}
+    style={{
+      top: (i + heightOffset) * GRID_SIZE,
+      width: width * GRID_SIZE - BORDER * 2,
+      height: GRID_SIZE - BORDER * 2
+    }}
+  >
+    <div className="block__output-content">
+      <span className="block__output-name">{name}</span>
+      <Circle />
 
-        {connectingLetter && (
-          <div className="block__output-letter-hover">
-            <HighlightFoundLetters string={connectingLetter} typed={typedLetters} />
-          </div>
-        )}
-      </div>
+      {connectingLetter && (
+        <div className="block__output-letter-hover">
+          <HighlightFoundLetters string={connectingLetter} typed={typedLetters} />
+        </div>
+      )}
     </div>
-  );
-};
+  </div>
+);
 
 const Block = ({
   block,
@@ -113,7 +109,7 @@ const Block = ({
         left: (block.position.x - grid.offsetX) * GRID_SIZE
       }}
     >
-      {spec.inputs
+      {(spec.inputs || [])
         .slice()
         .reverse()
         .map((input, i) => (

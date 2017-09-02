@@ -21,18 +21,20 @@ import {
   EDIT_BLOCK_SPEC,
   FIND_BLOCK,
   FIND_BLOCK_TYPED_LETTER,
+  GRID_SIZE,
   IS_DEBUG,
   MIN_BLOCK_HEIGHT,
   MIN_BLOCK_WIDTH,
   MOVE_BLOCK,
   MOVE_CURSOR,
   NEW_BLOCK_NAME,
+  READ_GRAPH_FROM_DB_DONE,
   RESIZE_BLOCK,
+  SAVE_GRAPH_TO_DB_DONE,
   SET_BLOCK_STATE,
   SHOW_NEW_BLOCK_PROMPT,
-  UPSERT_BLOCK,
   UPDATE_CONTENT_SIZE,
-  GRID_SIZE
+  UPSERT_BLOCK,
 } from '../constants';
 
 let initialState = fromJS({
@@ -596,6 +598,14 @@ export default (state = initialState, action) => {
         offsetY: 0
       })
     );
+  }
+
+  if (type === SAVE_GRAPH_TO_DB_DONE) {
+    state = state.set('databaseKey', payload.key);
+  }
+
+  if (type === READ_GRAPH_FROM_DB_DONE) {
+    state = fromJS(payload.data).set('databaseKey', payload.key);
   }
 
   if (IS_DEBUG && state) {

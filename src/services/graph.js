@@ -132,22 +132,25 @@ class Graph {
         // destory and rebuild blocks and connections to refresh the graph with new code...
 
         blocksConnections.forEach(connection => {
-          this.removeConnection({ id: connection.get('id') });
+          futureOps.push([this.removeConnection, { id: connection.get('id') }]);
         });
 
         blocks.forEach(block => {
-          this.removeBlock({ id: block.get('id') });
+          futureOps.push([this.removeBlock, { id: block.get('id') }]);
         });
 
         blocks.forEach(block => {
-          this.addBlock({
-            id: block.get('id'),
-            blockName: block.get('name')
-          });
+          futureOps.push([
+            this.addBlock,
+            {
+              id: block.get('id'),
+              blockName: block.get('name')
+            }
+          ]);
         });
 
         blocksConnections.forEach(connection => {
-          this.addConnection(connection.toJS());
+          futureOps.push([this.addConnection, connection.toJS()]);
         });
       });
 

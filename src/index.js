@@ -1,12 +1,16 @@
 /* global firebase */
 
 import DOM from 'react-dom-factories';
+import Measure from 'react-measure';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'react-autobind';
+import thunk from 'redux-thunk';
 import { connect, Provider } from 'react-redux';
-import { createStore } from 'redux';
-import Measure from 'react-measure';
+import { createStore, applyMiddleware } from 'redux';
+
+import get from 'lodash.get';
+import querystring from 'querystring';
 
 import createGraph from './services/graph';
 import reducer from './reducers';
@@ -27,6 +31,8 @@ import {
   moveBlock,
   moveCursor,
   resizeBlock,
+  saveGraphToDB,
+  readGraphFromDB,
   showNewBlockPrompt,
   updateContentSize
 } from './actions';
@@ -43,27 +49,15 @@ import './index.css';
 // for blocks ad-hoc UIs
 window.DOM = DOM;
 
-const config = {
+firebase.initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: 'das-ui.firebaseapp.com',
   databaseURL: 'https://das-ui.firebaseio.com',
   projectId: 'das-ui',
   messagingSenderId: process.env.REACT_APP_FIREBASE_SENDER_ID
-};
+});
 
-firebase.initializeApp(config);
-
-// console.log(config);
-
-// firebase
-//   .database()
-//   .ref('test')
-//   .once('value')
-//   .then(snap => {
-//     console.log(snap.key, snap.val());
-//   });
-
-const store = createStore(reducer);
+const store = createStore(reducer, applyMiddleware(thunk));
 const graph = createGraph(store);
 
 if (IS_DEBUG) {
@@ -84,10 +78,31 @@ class App extends Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.onKeydown);
+
+    // read from firebase if we have ?id=...
+    const urlId = get(querystring.parse(window.location.search.replace('?', '')), 'id');
+    if (urlId) {
+      this.props.readGraphFromDB(urlId);
+    }
   }
 
   componentWillUmount() {
     document.removeEventListener('keydown', this.onKeydown);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const urlId = get(querystring.parse(window.location.search.replace('?', '')), 'id');
+
+    if (nextProps.databaseKey !== urlId) {
+      const queryString = `?id=${nextProps.databaseKey}`;
+
+      if (window.history.pushState) {
+        const path = `${window.location.protocol}//${window.location.host}${window.location.pathname}${queryString}`;
+        window.history.pushState({ path }, '', path);
+      } else {
+        window.location.search = queryString;
+      }
+    }
   }
 
   makeConnections() {
@@ -183,7 +198,9 @@ class App extends Component {
       d: () => this.deleteHovered(),
       e: () => this.editBlockSpec(),
       f: () => this.props.findBlock(),
-      n: () => this.props.showNewBlockPrompt()
+      n: () => this.props.showNewBlockPrompt(),
+
+      s: () => this.props.saveGraphToDB()
     };
 
     if (keyFns[key]) {
@@ -224,39 +241,36 @@ class App extends Component {
   }
 }
 
-class AppMeasured extends Component {
-  render() {
-    return (
-      <Measure
-        bounds
-        onResize={contentRect => {
-          const { width, height } = contentRect.bounds;
-          this.props.updateContentSize(width, height);
-        }}
-      >
-        {({ measureRef }) => (
-          <div className="app" ref={measureRef}>
-            <App {...this.props} />
-          </div>
-        )}
-      </Measure>
-    );
-  }
-}
+const AppMeasured = props => (
+  <Measure
+    bounds
+    onResize={contentRect => {
+      const { width, height } = contentRect.bounds;
+      props.updateContentSize(width, height);
+    }}
+  >
+    {({ measureRef }) => (
+      <div className="app" ref={measureRef}>
+        <App {...props} />
+      </div>
+    )}
+  </Measure>
+);
 
 const mapStateToProps = state => {
   const hovered = state.getIn(['ui', 'hovered']);
   const isConnecting = !!state.getIn(['ui', 'newConnection']);
 
   return {
+    databaseKey: state.get('databaseKey'),
     hovered: hovered ? hovered.toJS() : null,
     isConnectingFromInput: isConnecting && hovered.get('input'),
     isConnectingFromOutput: isConnecting && hovered.get('output'),
     isFindingBlock: state.getIn(['ui', 'findingBlock']),
-    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay']),
     marginLeft: state.getIn(['ui', 'grid', 'marginLeft']),
     marginTop: state.getIn(['ui', 'grid', 'marginTop']),
-    newBlockPrompt: state.getIn(['ui', 'newBlockPrompt'])
+    newBlockPrompt: state.getIn(['ui', 'newBlockPrompt']),
+    upsertBlockOverlay: state.getIn(['ui', 'upsertBlockOverlay'])
   };
 };
 
@@ -275,6 +289,8 @@ const AppConnected = connect(mapStateToProps, {
   moveBlock,
   moveCursor,
   resizeBlock,
+  saveGraphToDB,
+  readGraphFromDB,
   showNewBlockPrompt,
   updateContentSize
 })(AppMeasured);
