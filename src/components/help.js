@@ -74,6 +74,9 @@ const Help = () => (
       <p>
         To save the graph and blocks hit <HL>s</HL>. URL can be then copied and saved for later.
       </p>
+      <p>
+        To toggle help hit <HL>?</HL>.
+      </p>
       <HL>DAS-UI</HL> was created by <a className="help__link" href="http://szymonkaliski.com">Szymon Kaliski</a>.
     </div>
   </div>
