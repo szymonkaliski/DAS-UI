@@ -1,3 +1,6 @@
+import BASE_BLOCKS from './base-blocks';
+export { BASE_BLOCKS };
+
 export const IS_DEBUG = window.location.search.indexOf('debug') >= 0;
 
 export const GRID_SIZE = 24;

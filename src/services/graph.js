@@ -179,6 +179,16 @@ class Graph {
       ...streams,
       setState: patch => this.store.dispatch(setBlockState(id, patch))
     });
+
+    // update block state after everything is done,
+    // used for initialising from DB/localStorage
+    setTimeout(() => {
+      const blockState = this.getGraphStoreState()
+        .getIn(['blocks', id, 'state'])
+        .toJS();
+
+      this.updateBlockState({ id, state: blockState });
+    }, 0);
   }
 
   addConnection({ id, fromId, fromOutput, toId, toInput }) {

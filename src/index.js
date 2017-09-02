@@ -1,6 +1,5 @@
 /* global firebase */
 
-import DOM from 'react-dom-factories';
 import Measure from 'react-measure';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
@@ -49,8 +48,11 @@ import UpsertBlock from './components/upsert-block';
 
 import './index.css';
 
-// for blocks ad-hoc UIs
+// for blocks
+import DOM from 'react-dom-factories';
+import rx from 'rx';
 window.DOM = DOM;
+window.rx = rx;
 
 firebase.initializeApp({
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -70,6 +72,11 @@ if (IS_DEBUG) {
 
   window.dumpGraph = () => {
     console.log({ blocks: graph.blocks, connections: graph.connections });
+  };
+
+  window.clearState = () => {
+    localStorage.setItem('state', null);
+    window.location.reload();
   };
 }
 

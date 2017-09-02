@@ -106,6 +106,7 @@ const mapStateToProps = state => ({
     .valueSeq()
     .toJS()
     .map(block => ({ ...block, id: block.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 });
 
 export default connect(mapStateToProps, { createBlock, closeNewBlockPrompt })(NewBlock);

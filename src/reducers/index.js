@@ -6,6 +6,7 @@ import leftPad from 'left-pad';
 import { clamp, executeBlockSrc } from '../utils';
 
 import {
+  BASE_BLOCKS,
   CANCEL_CONNECT_OR_FIND,
   CANCEL_UPSERT_BLOCK,
   CLOSE_NEW_BLOCK_PROMPT,
@@ -68,100 +69,44 @@ let initialState = fromJS({
   }
 });
 
-const TEMP_BLOCK_BUTTON = `{
-  name: 'button',
-  inputs: [],
-  outputs: ['click'],
-  code: ({ outputs, state }) => {
-    state.subscribe(click => {
-      outputs.click.onNext(click);
-    });
-  },
-  ui: ({ state, setState }) => {
-    return window.DOM.button(
-      {
-        onClick: () => setState({ click: (new Date()).getTime() })
-      },
-      state.click ? ('lastclick: ' + state.click) : 'clickme'
-    );
-  }
-}`;
-
-const TEMP_BLOCK_LOGGER = `{
-  name: 'logger',
-  inputs: ['log'],
-  outputs: [],
-
-  code: ({ inputs, setState }) => {
-    inputs.log.subscribe(log => {
-      setState({ log });
-    });
-  },
-
-  ui: ({ state }) => {
-    return window.DOM.pre(
-      {},
-      typeof(state.log) == 'object'
-        ? JSON.stringify(state.log, null, 2)
-        : state.log
-    );
-  }
-}`;
-
-const TEMP_BLOCK_TICKER = `{
-  name: 'ticker',
-  inputs: [],
-  outputs: ['tick'],
-  code: ({ outputs, state, setState }) => {
-    var counter = 0;
-
-    this.intervalHandle = setInterval(() => {
-      outputs.tick.onNext(counter);
-      setState({ counter });
-      counter++;
-    }, 1000);
-  },
-
-  cleanup: () => {
-    this.clearInterval(this.intervalHandle);
-  },
-
-  ui: ({ state }) => {
-    return 'tick: ' + state.counter;
-  }
-}`;
-
 if (IS_DEBUG) {
-  const parsed = JSON.parse(localStorage.getItem('state'));
+  let parsed;
 
-  window.clearState = () => {
-    localStorage.setItem('state', null);
-    window.location.reload();
-  };
+  try {
+    parsed = JSON.parse(localStorage.getItem('state'));
+  } catch (e) {
+    console.error(e);
+  }
 
   if (parsed) {
     initialState = fromJS(parsed);
   }
 }
 
-const storeBlockSpec = (state, blockSpecStr) => {
+const storeBlockSpec = (state, blockSpecStr, opts) => {
   const executed = executeBlockSrc(blockSpecStr);
+
+  if (!executed.name || !executed.code) {
+    console.warn(`block has no name or code!\n${blockSpecStr}`);
+    return state;
+  }
 
   return state.setIn(
     ['blockSpecs', executed.name],
     fromJS({
       name: executed.name,
-      inputs: executed.inputs,
-      outputs: executed.outputs,
+      inputs: executed.inputs || [],
+      outputs: executed.outputs || [],
       hasUI: !!executed.ui,
-      src: blockSpecStr
+      src: blockSpecStr,
+      ...(opts || {})
     })
   );
 };
 
-// for debug...
-initialState = [TEMP_BLOCK_BUTTON, TEMP_BLOCK_LOGGER, TEMP_BLOCK_TICKER].reduce(
-  (memo, blockSrc) => storeBlockSpec(memo, blockSrc),
+// load base blocks
+initialState = BASE_BLOCKS.reduce(
+  (memo, blockSrc) => storeBlockSpec(memo, blockSrc, { isEditable: false }),
   initialState
 );
 
