@@ -114,6 +114,9 @@ body {
 }
 
 .block__content {
+  display: flex;
+  flex-direction: column;
+
   border: 1px solid #d8d8d8;
   padding: 5px;
 }
@@ -182,6 +185,8 @@ body {
 
 .block__ui {
   overflow: hidden;
+  display: flex;
+  height: 100%;
 }
 
 .connections {

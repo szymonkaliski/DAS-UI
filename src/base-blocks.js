@@ -19,6 +19,18 @@ const utilLogger = `{
   }
 }`;
 
+const utilFetch = `{
+  name: 'util/fetch',
+  inputs: ['url'],
+  outputs: ['json'],
+
+  code: ({ inputs, outputs }) => {
+    inputs.url.subscribe(url => {
+      fetch(url).then(res => res.json()).then(json => outputs.json.onNext(json));
+    });
+  },
+}`;
+
 const timeInterval = `{
   name: 'time/interval',
   inputs: ['interval'],
@@ -99,7 +111,99 @@ const uiNumber = `{
       style: { width: '100%' },
       type: 'number',
       onChange: e => setState({ value: parseFloat(e.target.value) }),
-      value: state.value
+      value: state.value || 0
+    });
+  }
+}`;
+
+const uiString = `{
+  name: 'ui/string',
+  outputs: ['string'],
+
+  code: ({ state, outputs }) => {
+    state.subscribe(({ value }) => {
+      outputs.string.onNext(value);
+    });
+  },
+
+  ui: ({ state, setState }) => {
+    return DOM.input({
+      style: { width: '100%' },
+      type: 'text',
+      onChange: e => setState({ value: e.target.value }),
+      value: state.value || ''
+    });
+  }
+}`;
+
+const svgContainer = `{
+  name: 'svg/container',
+  inputs: ['children'],
+
+  code: ({ inputs, setState }) => {
+    inputs.children.subscribe(val => setState({ children: val }));
+  },
+
+  ui: ({ state }) => {
+    return DOM.svg(
+      { width: "100%", height: "100%" },
+      state.children
+    );
+  }
+}`;
+
+const svgCircle = `{
+  name: 'svg/circle',
+  inputs: ['cx', 'cy', 'r'],
+  outputs: ['element'],
+
+  code: ({ inputs, outputs }) => {
+    const combined = rx.Observable.combineLatest(
+      inputs.cx.startWith(0),
+      inputs.cy.startWith(0),
+      inputs.r.startWith(10)
+    );
+
+    combined.subscribe(([cx, cy, r]) => {
+      outputs.element.onNext(DOM.circle({ cx, cy, r }));
+    });
+  }
+}`;
+
+const svgLine = `{
+  name: 'svg/line',
+  inputs: ['x1', 'y1', 'x2', 'y2'],
+  outputs: ['element'],
+
+  code: ({ inputs, outputs }) => {
+    const combined = rx.Observable.combineLatest(
+      inputs.x1.startWith(0),
+      inputs.y1.startWith(0),
+      inputs.x2.startWith(10),
+      inputs.y2.startWith(10)
+    );
+
+    combined.subscribe(([x1, y1, x2, y2]) => {
+      outputs.element.onNext(DOM.line({ x1, y1, x2, y2 }));
+    });
+  }
+}`;
+
+const svgRect = `{
+  name: 'svg/rect',
+  inputs: ['x', 'y', 'width', 'height'],
+  outputs: ['element'],
+
+  code: ({ inputs, outputs }) => {
+    const combined = rx.Observable.combineLatest(
+      inputs.x.startWith(0),
+      inputs.y.startWith(0),
+      inputs.width.startWith(10),
+      inputs.height.startWith(10)
+    );
+
+    combined.subscribe(([x, y, width, height]) => {
+      outputs.element.onNext(DOM.rect({ x, y, width, height }));
     });
   }
 }`;
@@ -176,5 +280,11 @@ export default [
   timeDelay,
   timeInterval,
   uiNumber,
+  uiString,
   utilLogger,
+  utilFetch,
+  svgContainer,
+  svgCircle,
+  svgLine,
+  svgRect
 ];
