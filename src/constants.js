@@ -51,10 +51,14 @@ export const DEFAULT_BLOCK_SPEC = `
   outputs: [ 'x', 'y', 'z' ],
 
   // code - runs the block
+  //
   // * inputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - changes on input
-  // * outputs - object of \`rx.Subject\`: \`{ [inputKey]: Subject() }\` - send changes over output
+  // * outputs - object of \`rx.Subject\`: \`{ [outputKey]: Subject() }\` - send changes through output
   // * state - internal \`rx.Subject\` - changes when setState is used
   // * setState - used to change the \`state\` - communicates \`code\` with \`ui\`
+  //
+  // \`rx\` is exposed as global variable, so \`rx.Observable\`, \`rx.Subject\`, etc. are available
+  //
   code: ({ inputs, outputs, state, setState }) => {
     inputs.a.subscribe(a => {
       console.log('a:' + a);
@@ -74,14 +78,15 @@ export const DEFAULT_BLOCK_SPEC = `
   },
 
   // cleanup - optional function run when the block is removed from board
-  cleanup: () => {
-    // clean up things like setInterval/setTimeout, etc...
-  },
+  cleanup: () => {},
 
   // ui - optional React ui for block
+  //
   // * state - current state as plain object
   // * setState - same as in code, used to communicate
+  //
   // ui has access to \`DOM\` which is \`require('react-dom-factories')\`
+  //
   ui: ({ state, setState }) => {
     return DOM.div(
       { onClick: () => setState({ clickedAt: new Date().getTime() }) },
