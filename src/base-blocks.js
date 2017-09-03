@@ -1,5 +1,5 @@
-const logger = `{
-  name: 'logger',
+const utilLogger = `{
+  name: 'util/logger',
   inputs: ['log'],
   outputs: [],
 
@@ -172,9 +172,9 @@ export default [
   ...baseMathOps,
   ...singleArgMathOps,
   ...twoArgMathOps,
-  logger,
   mathRand,
   timeDelay,
   timeInterval,
-  uiNumber
+  uiNumber,
+  utilLogger,
 ];

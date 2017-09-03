@@ -341,7 +341,7 @@ export default (state = initialState, action) => {
       }
 
       return memo;
-    }, undefined);
+    }, false);
 
     state = state.setIn(['ui', 'hovered'], fromJS(hovered));
   }
