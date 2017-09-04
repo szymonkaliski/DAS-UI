@@ -4,7 +4,7 @@
 
 <p align="center"><img src="assets/screen.png" alt="screenshot" style="max-width:100%;"></p>
 
-Live: [https://das-ui.firebaseapp.com](https://sdf-ui.firebaseapp.com)
+Live: [https://das-ui.firebaseapp.com](https://das-ui.firebaseapp.com)
 
 Made with [react](https://facebook.github.io/react/), [redux](https://github.com/reactjs/redux), [RxJS](https://github.com/Reactive-Extensions/RxJS) and [immutable](https://facebook.github.io/immutable-js/).
 
