@@ -13,7 +13,7 @@ import querystring from 'querystring';
 
 import createGraph from './services/graph';
 import reducer from './reducers';
-import { IS_DEBUG } from './constants';
+import { IS_DEBUG, SAMPLE_GRAPH_ID } from './constants';
 
 import {
   cancelConnectOrFind,
@@ -99,6 +99,10 @@ class App extends Component {
     const lastVisit = localStorage.getItem('lastVisit');
     if (!lastVisit) {
       this.props.showHelp();
+
+      // we don't store this database key as this is a initial example to play with
+      this.props.readGraphFromDB(SAMPLE_GRAPH_ID, { storeDatabaseKey: false });
+
       localStorage.setItem('lastVisit', new Date());
     }
   }

@@ -141,6 +141,7 @@ const svgContainer = `{
   inputs: ['children'],
 
   code: ({ inputs, setState }) => {
+    setState({ children: [] });
     inputs.children.subscribe(val => setState({ children: val }));
   },
 
@@ -184,7 +185,7 @@ const svgLine = `{
     );
 
     combined.subscribe(([x1, y1, x2, y2]) => {
-      outputs.element.onNext(DOM.line({ x1, y1, x2, y2 }));
+      outputs.element.onNext(DOM.line({ x1, y1, x2, y2, style: { stroke: 'black', strokeWidth: 2 } }));
     });
   }
 }`;

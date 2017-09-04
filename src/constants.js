@@ -95,3 +95,5 @@ export const DEFAULT_BLOCK_SPEC = `
     );
   }
 }`;
+
+export const SAMPLE_GRAPH_ID = '-KtBs10CdWTKEtZmF628';

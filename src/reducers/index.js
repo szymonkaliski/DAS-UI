@@ -253,7 +253,9 @@ const processConnectionStateLetter = (state, typedLetter, type) => {
 export default (state = initialState, action) => {
   const { type, payload } = action;
 
-  console.info(`action: ${type}`, payload || {});
+  if (IS_DEBUG) {
+    console.info(`action: ${type}`, payload || {});
+  }
 
   if (type === MOVE_CURSOR) {
     const cursor = state
@@ -387,7 +389,8 @@ export default (state = initialState, action) => {
     state = storeBlockSpec(state, block).setIn(['ui', 'upsertBlockOverlay'], false);
 
     if (creatingNewBlock) {
-      state = createBlockOnBoard(state, block.name);
+      const blockSpec = executeBlockSrc(block);
+      state = createBlockOnBoard(state, blockSpec.name);
     }
   }
 
@@ -554,7 +557,13 @@ export default (state = initialState, action) => {
   }
 
   if (type === READ_GRAPH_FROM_DB_DONE) {
-    state = fromJS(payload.data).set('databaseKey', payload.key);
+    const opts = payload.opts || { storeDatabaseKey: true };
+
+    state = fromJS(payload.data);
+
+    if (opts.storeDatabaseKey) {
+      state = state.set('databaseKey', payload.key);
+    }
   }
 
   if (type === SHOW_HELP) {

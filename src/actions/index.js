@@ -130,10 +130,7 @@ export const updateContentSize = (width, height) => ({
 });
 
 export const saveGraphToDB = () => (dispatch, getState) => {
-  const data = getState()
-    // keys can't contain '/' in firebase
-    .update('blockSpecs', blockSpecs => blockSpecs.mapKeys(key => key.replace('/', '_')))
-    .toJS();
+  const data = getState().toJS();
 
   // store parent database key
   if (data.databaseKey) {
@@ -141,12 +138,10 @@ export const saveGraphToDB = () => (dispatch, getState) => {
     delete data.databaseKey;
   }
 
-  // TODO: remove default blockSpecs when they are added?
-
   firebase
     .database()
     .ref('graphs')
-    .push(data)
+    .push(JSON.stringify(data))
     .then(({ key }) => dispatch(saveGraphToDBDone(key)));
 };
 
@@ -155,29 +150,20 @@ export const saveGraphToDBDone = key => ({
   payload: { key }
 });
 
-export const readGraphFromDB = id => dispatch => {
+export const readGraphFromDB = (id, opts) => dispatch => {
   firebase
     .database()
     .ref(`graphs/${id}`)
     .once('value')
     .then(snap => {
-      const val = snap.val();
-
-      // turn back '_' to '/' in keys, not ideal but works for now
-      val.blockSpecs = Object.keys(val.blockSpecs).reduce((memo, key) => {
-        return {
-          ...memo,
-          [key.replace('_', '/')]: val.blockSpecs[key]
-        }
-      }, {});
-
-      dispatch(readGraphFromDBDone(snap.key, val))
+      const val = JSON.parse(snap.val());
+      dispatch(readGraphFromDBDone(snap.key, val, opts))
     });
 };
 
-export const readGraphFromDBDone = (key, data) => ({
+export const readGraphFromDBDone = (key, data, opts) => ({
   type: READ_GRAPH_FROM_DB_DONE,
-  payload: { data, key }
+  payload: { data, key, opts }
 });
 
 export const toggleHelp = () => ({
