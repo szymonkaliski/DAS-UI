@@ -1,4 +1,5 @@
-/* global firebase */
+import firebase from 'firebase/app';
+import 'firebase/database';
 
 import {
   CANCEL_CONNECT_OR_FIND,

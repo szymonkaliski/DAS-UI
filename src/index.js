@@ -1,5 +1,3 @@
-/* global firebase */
-
 import Measure from 'react-measure';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
@@ -7,6 +5,9 @@ import autobind from 'react-autobind';
 import thunk from 'redux-thunk';
 import { connect, Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
+
+import firebase from 'firebase/app';
+import 'firebase/database';
 
 import get from 'lodash.get';
 import querystring from 'querystring';

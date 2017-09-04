@@ -5,6 +5,7 @@
   "dependencies": {
     "brace": "^0.10.0",
     "classnames": "^2.2.5",
+    "firebase": "^4.3.0",
     "immutable": "^3.8.1",
     "immutable-diff": "^0.1.1",
     "left-pad": "^1.1.3",
